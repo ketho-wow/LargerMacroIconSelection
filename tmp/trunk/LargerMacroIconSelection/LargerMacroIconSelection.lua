@@ -53,6 +53,7 @@ local maxcreatedbuttons = 0
 
 -- Localization
 local L = {
+	["LargerMacroIconSelection v1.0"] = "LargerMacroIconSelection v1.0",
 	["Setting macro icon selection width to %d and height to %d"] = "Setting macro icon selection width to %d and height to %d",
 	["Usage: /lmis width height"] = "Usage: /lmis width height",
 	["Width must be 5 or larger, height must be 4 or larger"] = "Width must be 5 or larger, height must be 4 or larger",
@@ -64,6 +65,7 @@ local L = {
 --[[
 if GetLocale == "deDE" then
 	L = setmetatable({
+		["LargerMacroIconSelection v1.0"] = "LargerMacroIconSelection v1.0",
 		["Setting macro icon selection width to %d and height to %d"] = "blah blah %d blah %d",
 		["Usage: /lmis width height"] = "Usage: /lmis blah blah",
 		["Width must be 5 or larger, height must be 4 or larger"] = "blah blah blah blah blah blah",
@@ -72,6 +74,7 @@ if GetLocale == "deDE" then
 end
 if GetLocale == "frFR" then
 	L = setmetatable({
+		["LargerMacroIconSelection v1.0"] = "LargerMacroIconSelection v1.0",
 		["Setting macro icon selection width to %d and height to %d"] = "blah blah %d blah %d",
 		["Usage: /lmis width height"] = "Usage: /lmis blah blah",
 		["Width must be 5 or larger, height must be 4 or larger"] = "blah blah blah blah blah blah",
@@ -292,6 +295,7 @@ function LargerMacroIconSelection.Config(msg)
 			return
 		end
 	end
+	DEFAULT_CHAT_FRAME:AddMessage(L["LargerMacroIconSelection v1.0"])
 	DEFAULT_CHAT_FRAME:AddMessage(L["Usage: /lmis width height"])
 	DEFAULT_CHAT_FRAME:AddMessage(L["Width must be 5 or larger, height must be 4 or larger"])
 	DEFAULT_CHAT_FRAME:AddMessage(L["Current width is %d and current height is %d"]:format(self.db.width, self.db.height))
