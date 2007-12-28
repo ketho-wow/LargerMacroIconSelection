@@ -1,0 +1,10 @@
+## Interface: 20300
+## Title: LargerMacroIconSelection
+## Version: 1.0
+## Author: Xinhuan
+## Notes: Shows you a much bigger macro icon selection frame instead of the standard 5x4 one
+## LoadOnDemand: 1
+## LoadWith: Blizzard_MacroUI
+## SavedVariables: LargerMacroIconSelectionDB
+
+LargerMacroIconSelection.lua
