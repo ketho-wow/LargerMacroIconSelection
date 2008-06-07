@@ -62,16 +62,17 @@ local L = {
 
 -- For non-English localizations, uncomment the relevant
 -- sections if someone ever actually helps to localize it
---[[
+
 if GetLocale == "deDE" then
 	L = setmetatable({
 		["LargerMacroIconSelection v1.0"] = "LargerMacroIconSelection v1.0",
-		["Setting macro icon selection width to %d and height to %d"] = "blah blah %d blah %d",
-		["Usage: /lmis width height"] = "Usage: /lmis blah blah",
-		["Width must be 5 or larger, height must be 4 or larger"] = "blah blah blah blah blah blah",
-		["Current width is %d and current height is %d"] = "Current width is %d and current height is %d",
+		["Setting macro icon selection width to %d and height to %d"] = "Macrosymbol-Auswahlfenster ist nun %d Symbole breit und %d Symbole hoch",
+		["Usage: /lmis width height"] = "So geht's: /lmis Breite Höhe",
+		["Width must be 5 or larger, height must be 4 or larger"] = "Breite muss mindestens 5, Höhe mindestens 4 sein",
+		["Current width is %d and current height is %d"] = "Aktuelle Breite ist: %d, aktuelle Höhe ist: %d",
 	}, {__index = L})
 end
+--[[
 if GetLocale == "frFR" then
 	L = setmetatable({
 		["LargerMacroIconSelection v1.0"] = "LargerMacroIconSelection v1.0",
