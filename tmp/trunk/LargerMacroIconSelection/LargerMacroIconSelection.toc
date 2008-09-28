@@ -6,5 +6,6 @@
 ## LoadOnDemand: 1
 ## LoadWith: Blizzard_MacroUI
 ## SavedVariables: LargerMacroIconSelectionDB
+## X-Email: xinhuan AT gmail DOT com
 
 LargerMacroIconSelection.lua
