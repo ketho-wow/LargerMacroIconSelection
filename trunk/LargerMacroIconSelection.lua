@@ -1,10 +1,10 @@
 --[[
 LargerMacroIconSelection v1.0
-28th December 2007
-Copyright (C) 2007 Xinhuan
+14th October 2008
+Copyright (C) 2008 Xinhuan
 
 Shows you a much bigger macro icon selection frame instead of the
-standard 5x4 one
+standard 5x4 one.
 
 Slash commands:
 /lmis width height
