@@ -1,7 +1,7 @@
 --[[
 LargerMacroIconSelection v1.0
 14th October 2008
-Copyright (C) 2008 Xinhuan
+Copyright (C) 2010 Xinhuan
 
 Shows you a much bigger macro icon selection frame instead of the
 standard 5x4 one.

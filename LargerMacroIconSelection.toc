@@ -1,4 +1,4 @@
-## Interface: 30000
+## Interface: 40000
 ## Title: LargerMacroIconSelection
 ## Version: 1.0
 ## Author: Xinhuan
