@@ -1,7 +1,7 @@
 --[[
-LargerMacroIconSelection v1.0
-14th October 2008
-Copyright (C) 2010 Xinhuan
+LargerMacroIconSelection v1.0.1
+6th May 2011
+Copyright (C) 2011 Xinhuan
 
 Shows you a much bigger macro icon selection frame instead of the
 standard 5x4 one.
@@ -53,7 +53,7 @@ local maxcreatedbuttons = 0
 
 -- Localization
 local L = {
-	["LargerMacroIconSelection v1.0"] = "LargerMacroIconSelection v1.0",
+	["LargerMacroIconSelection v1.0.1"] = "LargerMacroIconSelection v1.0.1",
 	["Setting macro icon selection width to %d and height to %d"] = "Setting macro icon selection width to %d and height to %d",
 	["Usage: /lmis width height"] = "Usage: /lmis width height",
 	["Width must be 5 or larger, height must be 4 or larger"] = "Width must be 5 or larger, height must be 4 or larger",
@@ -65,7 +65,7 @@ local L = {
 
 if GetLocale == "deDE" then
 	L = setmetatable({
-		["LargerMacroIconSelection v1.0"] = "LargerMacroIconSelection v1.0",
+		["LargerMacroIconSelection v1.0.1"] = "LargerMacroIconSelection v1.0.1",
 		["Setting macro icon selection width to %d and height to %d"] = "Macrosymbol-Auswahlfenster ist nun %d Symbole breit und %d Symbole hoch",
 		["Usage: /lmis width height"] = "So geht's: /lmis Breite Höhe",
 		["Width must be 5 or larger, height must be 4 or larger"] = "Breite muss mindestens 5, Höhe mindestens 4 sein",
@@ -75,7 +75,7 @@ end
 --[[
 if GetLocale == "frFR" then
 	L = setmetatable({
-		["LargerMacroIconSelection v1.0"] = "LargerMacroIconSelection v1.0",
+		["LargerMacroIconSelection v1.0.1"] = "LargerMacroIconSelection v1.0.1",
 		["Setting macro icon selection width to %d and height to %d"] = "blah blah %d blah %d",
 		["Usage: /lmis width height"] = "Usage: /lmis blah blah",
 		["Width must be 5 or larger, height must be 4 or larger"] = "blah blah blah blah blah blah",
@@ -296,7 +296,7 @@ function LargerMacroIconSelection.Config(msg)
 			return
 		end
 	end
-	DEFAULT_CHAT_FRAME:AddMessage(L["LargerMacroIconSelection v1.0"])
+	DEFAULT_CHAT_FRAME:AddMessage(L["LargerMacroIconSelection v1.0.1"])
 	DEFAULT_CHAT_FRAME:AddMessage(L["Usage: /lmis width height"])
 	DEFAULT_CHAT_FRAME:AddMessage(L["Width must be 5 or larger, height must be 4 or larger"])
 	DEFAULT_CHAT_FRAME:AddMessage(L["Current width is %d and current height is %d"]:format(self.db.width, self.db.height))

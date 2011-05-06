@@ -1,6 +1,6 @@
-## Interface: 40000
+## Interface: 40100
 ## Title: LargerMacroIconSelection
-## Version: 1.0
+## Version: 1.0.1
 ## Author: Xinhuan
 ## Notes: Shows you a much bigger macro icon selection frame instead of the standard 5x4 one
 ## LoadOnDemand: 1
