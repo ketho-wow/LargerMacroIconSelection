@@ -90,19 +90,19 @@ end
 -- that it uses our local constants instead of the global ones, and it
 -- has an extra macroPopupButton:SetID() line.
 local function Hooked_MacroPopupFrame_Update()
-	local numMacroIcons = GetNumMacroIcons();
+	local numMacroIcons = #(GetMacroIcons());
 	local macroPopupIcon, macroPopupButton;
 	local macroPopupOffset = FauxScrollFrame_GetOffset(MacroPopupScrollFrame);
 	local index;
 	local texture;
 
 	for i=1, NUM_MACRO_ICONS_SHOWN do
-		macroPopupIcon = getglobal("MacroPopupButton"..i.."Icon");
-		macroPopupButton = getglobal("MacroPopupButton"..i);
+		macroPopupIcon = _G["MacroPopupButton"..i.."Icon"];
+		macroPopupButton = _G["MacroPopupButton"..i];
 		index = (macroPopupOffset * NUM_ICONS_PER_ROW) + i;
-		texture = GetMacroIconInfo(index);
-		if ( index <= numMacroIcons ) then
-			macroPopupIcon:SetTexture(texture);
+		texture = GetSpellorMacroIconInfo(index);
+		if ( index <= numMacroIcons and texture ) then
+			macroPopupIcon:SetTexture("INTERFACE\\ICONS\\"..texture);
 			macroPopupButton:Show();
 		else
 			macroPopupIcon:SetTexture("");
