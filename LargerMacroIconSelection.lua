@@ -290,9 +290,9 @@ function LargerMacroIconSelection.Config(msg)
 			NUM_MACRO_ICONS_SHOWN = NUM_ICONS_PER_ROW * NUM_ICON_ROWS
 			self:Init()
 			if MacroPopupFrame:IsVisible() then
-				Hooked_MacroPopupFrame_Update(L["Setting macro icon selection width to %d and height to %d"]:format(width, height))
+				Hooked_MacroPopupFrame_Update()
 			end
-			DEFAULT_CHAT_FRAME:AddMessage()
+			DEFAULT_CHAT_FRAME:AddMessage(L["Setting macro icon selection width to %d and height to %d"]:format(width, height))
 			return
 		end
 	end
