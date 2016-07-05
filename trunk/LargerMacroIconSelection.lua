@@ -1,15 +1,22 @@
 --[[
-Copyright LargerMacroIconSelection by Xinhuan
-Modified by Ketho
+LargerMacroIconSelection v1.0.7
+5th July 2016
+Copyright (C) 2016 Xinhuan
 
--- License
+Shows you a much bigger macro icon selection frame instead of the
+standard 5x4 one.
+
+Slash commands:
+/lmis width height
+
+-----
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
 This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY without even the implied warranty of
+but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
@@ -17,16 +24,13 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ]]
 
--- Note: compared with Expanded Macro Selection (EMS) they are doing it much simpler :S
+-- Note: learned a lot from Expanded Macro Selection (EMS)
 local NAME, S = ...
-local L = S.L
+local L = S.L -- Localization
 local db
 
--- Fix WoD too, even though the TOC is for Legion
-local tocversion = select(4, GetBuildInfo())
-local isLegion = (tocversion == 70000)
-local SetFileDataTexture = isLegion and "SetTexture" or "SetToFileData"
-local blp = isLegion and ".blp" or ""
+local isLegion = (select(4, GetBuildInfo()) >= 70000)
+local blp = isLegion and ".blp" or "" -- GetTexture() includes ".blp" in Legion
 
 local defaults = {
 	width = 10,
@@ -35,73 +39,43 @@ local defaults = {
 
 -- Local constants
 local ICONS_PER_ROW, ICON_ROWS, ICONS_SHOWN
-local ICON_FILENAMES = {}
-local NUM_ICONS = {}
 local previousbuttons = 0
 
 local popup_regions, sf_regions = {}, {}
-local origSize = {}
+local origSize, origNum = {}, {}
+local active, pending = {}, {}
 
-local active, pendingChange = {}, {}
-
-local function RefreshGuildBankIconInfo()
-	ICON_FILENAMES[1] = "INV_MISC_QUESTIONMARK"
-	
-	GetLooseMacroItemIcons(ICON_FILENAMES)
-	GetLooseMacroIcons(ICON_FILENAMES)
-	GetMacroItemIcons(ICON_FILENAMES) -- Counted 12528 icons on 7.0.3.22124
-	GetMacroIcons(ICON_FILENAMES) -- Counted 2121 icons
-end
-
--- GB_ICON_FILENAMES is not accessible
-local function GetGuildBankIconInfo(index)
-	return ICON_FILENAMES[index]
-end
-
--- There are still some differences between the 3 of them though
 local frames = {
 	MacroPopupScrollFrame = function() return {
-			icons_per_row = NUM_ICONS_PER_ROW, -- 5
-			icon_rows = NUM_ICON_ROWS, -- 4
-			icons_shown = NUM_MACRO_ICONS_SHOWN, -- 20
-			icon_row_height = MACRO_ICON_ROW_HEIGHT, -- 36
-			geticoninfo = GetSpellorMacroIconInfo,
+			icons_per_row = "NUM_ICONS_PER_ROW", -- 5
+			icon_rows = "NUM_ICON_ROWS", -- 4
+			icons_shown = "NUM_MACRO_ICONS_SHOWN", -- 20
 			button = "MacroPopupButton",
-			buttontemplate = "MacroPopupButtonTemplate",
+			template = "MacroPopupButtonTemplate",
+			update = MacroPopupFrame_Update,
 		}
 	end,
 	GearManagerDialogPopupScrollFrame = function() return {
-			icons_per_row = NUM_GEARSET_ICONS_PER_ROW, -- 5
-			icon_rows = NUM_GEARSET_ICON_ROWS, -- 3
-			icons_shown = NUM_GEARSET_ICONS_SHOWN, -- 15
-			icon_row_height = GEARSET_ICON_ROW_HEIGHT, -- 36
-			geticoninfo = GetEquipmentSetIconInfo,
+			icons_per_row = "NUM_GEARSET_ICONS_PER_ROW", -- 5
+			icon_rows = "NUM_GEARSET_ICON_ROWS", -- 3
+			icons_shown = "NUM_GEARSET_ICONS_SHOWN", -- 15
 			button = "GearManagerDialogPopupButton",
-			buttontemplate = "GearSetPopupButtonTemplate",
-			topcoords = 212/256, -- different TexCoord
+			template = "GearSetPopupButtonTemplate",
+			update = GearManagerDialogPopup_Update,
+			topcoords = 212/256, -- Different TexCoord
 		}
 	end,
 	GuildBankPopupScrollFrame = function() return {
-			icons_per_row = NUM_GUILDBANK_ICONS_PER_ROW, -- 4
-			icon_rows = NUM_GUILDBANK_ICON_ROWS, -- 4
-			icons_shown = NUM_GUILDBANK_ICONS_SHOWN, -- 16
-			icon_row_height = GUILDBANK_ICON_ROW_HEIGHT, -- 36
-			geticoninfo = GetGuildBankIconInfo, -- custom
+			icons_per_row = "NUM_GUILDBANK_ICONS_PER_ROW", -- 4
+			icon_rows = "NUM_GUILDBANK_ICON_ROWS", -- 4
+			icons_shown = "NUM_GUILDBANK_ICONS_SHOWN", -- 16
 			button = "GuildBankPopupButton",
-			buttontemplate = "GuildBankPopupButtonTemplate",
+			template = "GuildBankPopupButtonTemplate",
+			update = GuildBankPopupFrame_Update,
+			extrawidth = 4, -- GuildBank is slightly thinner
 		}
 	end,
 }
-
--- Lets not account for multiple popups being shown at the same time
-local function GetActiveScrollFrame()
-	for k in pairs(frames) do
-		local sf = _G[k]
-		if sf and sf:IsVisible() then
-			return sf
-		end
-	end
-end
 
 local f = CreateFrame("Frame")
 
@@ -114,25 +88,17 @@ function f:OnEvent(event, addon)
 		ICON_ROWS = db.height
 		ICONS_SHOWN = ICONS_PER_ROW * ICON_ROWS
 		
-		-- Get numItems through hooking, since MACRO_ICON_FILENAMES and the like are not accessible
-		-- luckily for GearManagerDialogPopupScrollFrame and MacroPopupScrollFrame, they fire twice before f:PopupFrame_Update()
-		hooksecurefunc("FauxScrollFrame_Update", function(frame, numItems)
-			NUM_ICONS[frame] = numItems
-		end)
+		self:SetHook(GearManagerDialogPopupScrollFrame)
 		
-		self:SetHook(GearManagerDialogPopupScrollFrame, "GearManagerDialogPopup_Update")
-		
-		-- Known bug, RecalculateGearManagerDialogPopup needs to be updated/hooked or equipment manager scrolls to an empty spot
-		-- when pressing the EditButton, but for that we also need EM_ICON_FILENAMES and RefreshEquipmentSetIconInfo(), its too much trouble
-		--hooksecurefunc("RecalculateGearManagerDialogPopup", f.RecalculateGearManagerDialogPopup)
+		if IsAddOnLoaded("Blizzard_MacroUI") then -- Someone else made it load before us
+			self:SetHook(MacroPopupScrollFrame)
+		end
 		
 	elseif addon == "Blizzard_MacroUI" then
-		self:SetHook(MacroPopupScrollFrame, "MacroPopupFrame_Update")
-		
+		self:SetHook(MacroPopupScrollFrame)
 	elseif addon == "Blizzard_GuildBankUI" then
-		if not IsGuildLeader() then return end -- No access to guild bank icons
-		RefreshGuildBankIconInfo() -- Prepare Guild Bank icon info
-		self:SetHook(GuildBankPopupScrollFrame, "GuildBankPopupFrame_Update")
+		if not IsGuildLeader() then return end -- No access to guild bank tabs
+		self:SetHook(GuildBankPopupScrollFrame)
 	end
 end
 
@@ -140,142 +106,165 @@ f:RegisterEvent("ADDON_LOADED")
 f:SetScript("OnEvent", f.OnEvent)
 
 -- Cant get the textures yet because of the releaseUITextures cvar, hook OnShow
-function f:SetHook(sf, hook)
+function f:SetHook(sf)
 	local popup = sf:GetParent()
 	
 	popup:HookScript("OnShow", function()
-		if pendingChange[sf] then -- Popup window already initialized, but size was changed
-			self:InitTextures(sf) -- Textures available now
-			self:PopupFrame_Update(sf)
-			pendingChange[sf] = false
+		if pending[sf] then -- Size was changed
+			self:UpdateTextures(sf) -- Textures available now
+			pending[sf] = false
 		elseif active[sf] then -- Nothing to change
 			return
 		else
-			self:InitOnce(sf, hook)
+			self:Initialize(sf)
 			active[sf] = true
 		end
 	end)
 end
 
-function f:InitOnce(sf, hook)
-	-- Get the anonymous textures into a table before adding more regions
+function f:Initialize(sf)
 	local popup = sf:GetParent()
-	popup_regions[popup] = {popup:GetRegions()}
-	sf_regions[popup] = {sf:GetRegions()}
 	
-	origSize[popup] = {
+	-- Get frame specific data
+	frames[sf] = frames[sf:GetName()]()
+	
+	-- Group the anonymous textures into a table before adding more regions
+	popup_regions[sf] = {popup:GetRegions()}
+	sf_regions[sf] = {sf:GetRegions()}
+	
+	-- Get original dimensions
+	origSize[sf] = {
 		width = popup:GetWidth(),
 		height = popup:GetHeight(),
 		sfwidth = sf:GetWidth(),
 		sfheight = sf:GetHeight(),
 	}
 	
-	frames[sf] = frames[sf:GetName()]() -- Get popup specific information
+	-- Get original amount of rows and columns
+	origNum[sf] = {
+		icons_per_row = _G[frames[sf].icons_per_row],
+		icon_rows = _G[frames[sf].icon_rows],
+		icons_shown =  _G[frames[sf].icons_shown],
+	}
 	
-	for i = 1, 6 do	-- Create extra background textures
+	-- Create extra background textures
+	for i = 1, 6 do
 		popup["largertexture"..i] = popup:CreateTexture(nil, "BACKGROUND")
 	end
-	sf.largertexture1 = sf:CreateTexture(nil, "BACKGROUND") -- Scrollframe textures
+	sf.largertexture1 = sf:CreateTexture(nil, "BACKGROUND") -- Scrollframe texture
 	
-	self:InitButtons(sf) -- Setup buttons
-	self:InitTextures(sf) -- Setup popup window
-	self:PopupFrame_Update(sf) -- Initial update
-	
-	hooksecurefunc(hook, f.PopupFrame_Update) -- Further updates
+	-- Add buttons, move textures
+	self:UpdateButtons(sf)
+	self:UpdateTextures(sf)
+	frames[sf].update() -- Initialized after OnShow, so not all icons are properly shown; force update
 end
 
 -- Initialization that should be called when the width/height values change
-function f:InitButtons(sf)
+function f:UpdateButtons(sf)
 	local popup = sf:GetParent()
 	local button = frames[sf].button
-	local template = frames[sf].buttontemplate
+	local template = frames[sf].template
 	
-	-- Create the extra buttons
-	for i = 16, ICONS_SHOWN do -- 15 is the minimum for the GearManager
-		local a = button..i
-		if not _G[a] then
-			CreateFrame("CheckButton", a, popup, template)
-		end
-	end
+	-- Set the frame specific globals to the new values
+	local frame = frames[sf]
+	_G[frame.icons_per_row] = ICONS_PER_ROW
+	_G[frame.icon_rows] = ICON_ROWS
+	_G[frame.icons_shown] = ICONS_SHOWN
 	
-	-- Reposition all the buttons except the first one
+	-- Add buttons
 	for i = 2, ICONS_SHOWN do
-		local a = _G[button..i]
-		a:ClearAllPoints()
-		if i % ICONS_PER_ROW == 1 then
-			a:SetPoint("TOPLEFT", _G[button..(i-ICONS_PER_ROW)], "BOTTOMLEFT", 0, -8)
-		else
-			a:SetPoint("LEFT", _G[button..i-1], "RIGHT", 10, 0)
+		local b = _G[button..i]
+		
+		if not b then -- Create button
+			b = CreateFrame("CheckButton", button..i, popup, template)
+			b:SetID(i) -- Assign corresponding Id
+			
+			if popup == GearManagerDialogPopup then -- GearManager fix
+				tinsert(GearManagerDialogPopup.buttons, b)
+			end
 		end
-		a:Show()
+		
+		b:ClearAllPoints()
+		if i % ICONS_PER_ROW == 1 then
+			b:SetPoint("TOPLEFT", _G[button..(i-ICONS_PER_ROW)], "BOTTOMLEFT", 0, -8)
+		else
+			b:SetPoint("LEFT", _G[button..i-1], "RIGHT", 10, 0)
+		end
 	end
 	
-	-- Hide any leftover buttons after a decrease
+	-- Hide any superfluous buttons
 	for i = ICONS_SHOWN + 1, previousbuttons do
-		_G[button..i]:Hide()
+		local b = _G[button..i]
+		if b then -- Sanity check
+			b:Hide()
+		end
 	end
 end
 
-function f:InitTextures(sf)	
+function f:UpdateTextures(sf)	
 	local popup = sf:GetParent()
 	local button = frames[sf].button
 	
 	-- Calculate the extra width and height due to the new size
-	local extrawidth = (_G[button.."1"]:GetWidth() + 10) * (ICONS_PER_ROW - frames[sf].icons_per_row) + 1
-	local extraheight = (_G[button.."1"]:GetHeight() + 8) * (ICON_ROWS - frames[sf].icon_rows) + 1
+	local extrawidth = (_G[button.."1"]:GetWidth() + 10) * (ICONS_PER_ROW - origNum[sf].icons_per_row) + (frames[sf].extrawidth or -6)
+	local extraheight = (_G[button.."1"]:GetHeight() + 8) * (ICON_ROWS - origNum[sf].icon_rows) + 2
 	
 	-- Resize the frames
-	local size = origSize[popup]
+	local size = origSize[sf]
 	popup:SetWidth(size.width + extrawidth)
 	popup:SetHeight(size.height + extraheight)
 	sf:SetWidth(size.sfwidth + extrawidth)
 	sf:SetHeight(size.sfheight + extraheight)
 	
-	local isGuildBank = (sf == GuildBankPopupScrollFrame) -- bit hacky
+	local isGuildBank = (popup == GuildBankPopupFrame) -- GuildBank fix
 	
 	-- Reposition the unnamed textures, as well as init
 	-- the extra ones to cover up the extra areas
-	for _, child in ipairs(popup_regions[popup]) do
+	for _, child in ipairs(popup_regions[sf]) do
 		if child.GetTexture then
-			if child:GetTexture() == "Interface\\MacroFrame\\MacroPopup-TopLeft"..blp then -- Legion: .blp is included in path
+			local texture = child:GetTexture()
+			
+			if texture == "Interface\\MacroFrame\\MacroPopup-TopLeft"..blp then
 				popup.largertexture1:SetTexture("Interface\\MacroFrame\\MacroPopup-TopLeft")
 				popup.largertexture1:SetTexCoord(0.5, 0.7, 0, frames[sf].topcoords or 1) 
 				popup.largertexture1:SetWidth(extrawidth)
 				popup.largertexture1:SetHeight(child:GetHeight())
 				popup.largertexture1:ClearAllPoints()
-				popup.largertexture1:SetPoint("TOPLEFT", child, "TOPRIGHT")
+				popup.largertexture1:SetPoint("TOPLEFT", child, "TOPRIGHT") -- top side
 
 				popup.largertexture2:SetTexture("Interface\\MacroFrame\\MacroPopup-TopLeft")
 				popup.largertexture2:SetTexCoord(0, 1, 0.5, 0.7)
 				popup.largertexture2:SetWidth(child:GetWidth())
 				popup.largertexture2:SetHeight(extraheight)
-				popup.largertexture2:SetPoint("TOPLEFT", child, "BOTTOMLEFT")
+				popup.largertexture2:ClearAllPoints()
+				popup.largertexture2:SetPoint("TOPLEFT", child, "BOTTOMLEFT") -- left side
 
 				popup.largertexture3:SetTexture("Interface\\MacroFrame\\MacroPopup-TopLeft")
 				popup.largertexture3:SetTexCoord(0.5, 0.7, 0.5, 0.7)
 				popup.largertexture3:SetWidth(extrawidth)
 				popup.largertexture3:SetHeight(extraheight)
-				popup.largertexture3:SetPoint("TOPLEFT", child, "BOTTOMRIGHT")
+				popup.largertexture3:ClearAllPoints()
+				popup.largertexture3:SetPoint("TOPLEFT", child, "BOTTOMRIGHT") -- middle
 				
-			elseif child:GetTexture() == "Interface\\MacroFrame\\MacroPopup-TopRight"..blp then
+			elseif texture == "Interface\\MacroFrame\\MacroPopup-TopRight"..blp then
 				if not isGuildBank then
 					child:ClearAllPoints()
 					child:SetPoint("TOPRIGHT", 23, 0)
 				end
 				
-			elseif child:GetTexture() == "Interface\\MacroFrame\\MacroPopup-BotLeft"..blp then
+			elseif texture == "Interface\\MacroFrame\\MacroPopup-BotLeft"..blp then
 				if not isGuildBank then
-					-- Resize this one
-					child:ClearAllPoints()
+					child:ClearAllPoints() -- Resize this one
 					child:SetPoint("BOTTOMLEFT", 0, -21)
 					child:SetWidth(256 * 0.1)
 					child:SetTexCoord(0, 0.1, 0, 1)
 				end
 
 				popup.largertexture5:SetWidth(256 * 0.55)
+				popup.largertexture6:ClearAllPoints()
 				popup.largertexture6:SetPoint("BOTTOMLEFT", child, "BOTTOMRIGHT")
 				
-			elseif child:GetTexture() == "Interface\\MacroFrame\\MacroPopup-BotRight"..blp then
+			elseif texture == "Interface\\MacroFrame\\MacroPopup-BotRight"..blp then
 				if not isGuildBank then
 					child:ClearAllPoints()
 					child:SetPoint("BOTTOMRIGHT", 23, -21)
@@ -285,22 +274,24 @@ function f:InitTextures(sf)
 				popup.largertexture4:SetTexCoord(0, 1, 0.5, 0.7)
 				popup.largertexture4:SetWidth(child:GetWidth())
 				popup.largertexture4:SetHeight(extraheight)
-				popup.largertexture4:SetPoint("BOTTOMRIGHT", child, "TOPRIGHT")
+				popup.largertexture4:ClearAllPoints()
+				popup.largertexture4:SetPoint("BOTTOMRIGHT", child, "TOPRIGHT") -- right side
 
 				popup.largertexture5:SetTexture("Interface\\MacroFrame\\MacroPopup-BotLeft")
 				popup.largertexture5:SetTexCoord(0.45, 1, 0, 1)
 				popup.largertexture5:SetHeight(child:GetHeight())
-				popup.largertexture5:SetPoint("BOTTOMRIGHT", child, "BOTTOMLEFT")
+				popup.largertexture5:ClearAllPoints()
+				popup.largertexture5:SetPoint("BOTTOMRIGHT", child, "BOTTOMLEFT") -- bottom side1
 
 				popup.largertexture6:SetTexture("Interface\\MacroFrame\\MacroPopup-BotLeft")
 				popup.largertexture6:SetTexCoord(0.1, 0.45, 0, 1)
-				popup.largertexture6:SetPoint("BOTTOMRIGHT", popup.largertexture5, "BOTTOMLEFT")
+				popup.largertexture6:SetPoint("BOTTOMRIGHT", popup.largertexture5, "BOTTOMLEFT") -- bottom side2
 			end
 		end
 	end
 	
 	-- And some more for the scrollframe
-	for _, child in ipairs(sf_regions[popup]) do
+	for _, child in ipairs(sf_regions[sf]) do
 		if child.GetTexture then
 			local a, b, c, d = child:GetTexCoord()
 			if c - 0.0234375 < 0.01 then
@@ -314,67 +305,12 @@ function f:InitTextures(sf)
 	end
 end
 
--- Hook the display of the macro icons to re-display to our size.
--- Most of this function is copied from the hooked update function, except
--- that it uses our local constants instead of the global ones, and it
--- has an extra popupButton:SetID() line.
-function f:PopupFrame_Update(sf)
-	-- GearManagerDialogPopup_Update: fires (but passes nothing) on clicking buttons/OnShow; passes GearManagerDialogPopupScrollFrame on scrolling
-	-- MacroPopupFrame_Update: passes MacroPopupFrame on clicking buttons/OnShow; passes MacroPopupScrollFrame on scrolling
-	-- GuildBankPopupFrame_Update: passes 1 on clicking buttons/OnShow; passes GuildBankPopupScrollFrame on scrolling
-	if not sf or sf == MacroPopupFrame or sf == 1 then -- Seems to only pas nil when this addon is enabled and doing something
-		sf = GetActiveScrollFrame()
-	end
-	
-	local popup = sf:GetParent()
-	local popupOffset = FauxScrollFrame_GetOffset(sf)
-	local button = frames[sf].button
-	local isGuildBank = (sf == GuildBankPopupScrollFrame)
-	
-	-- the posthook for GuildBankPopupScrollFrame() only fires after GuildBankPopupFrame_Update(), but luckily we can just use the standard ICON_FILENAMES
-	-- otherwise multiply with the original icons_per_row to get the original amount of icons
-	local numIcons = isGuildBank and #ICON_FILENAMES or NUM_ICONS[sf] * frames[sf].icons_per_row
-	local GetIconInfo = frames[sf].geticoninfo
-	
-	for i = 1, ICONS_SHOWN do
-		local popupButton = _G[button..i]
-		local popupIcon = _G[button..i.."Icon"]
-		
-		local index = (popupOffset * ICONS_PER_ROW) + i
-		local texture = GetIconInfo(index)
-		
-		if index <= numIcons and texture then
-			if type(texture) == "number" then -- Legion / WoD FileDataIds
-				popupIcon[SetFileDataTexture](popupIcon, texture)
-				popupButton:Show()
-			else -- WoD texture paths
-				popupIcon:SetTexture("Interface\\ICONS\\"..texture)
-				popupButton:Show()
-			end
-		else
-			popupIcon:SetTexture("")
-			popupButton:Hide()
-		end
-		
-		if popup.selectedIcon and index == popup.selectedIcon then
-			popupButton:SetChecked(1)
-		elseif popup.selectedIconTexture == texture then
-			popupButton:SetChecked(1)
-		else
-			popupButton:SetChecked(nil)
-		end
-		popupButton:SetID(i + (ICONS_PER_ROW - frames[sf].icons_per_row) * popupOffset) -- new line
-	end
-	
-	FauxScrollFrame_Update(sf, ceil(numIcons / ICONS_PER_ROW), ICON_ROWS, frames[sf].icon_row_height)
-end
-
 -- Slash commands
 for i, v in ipairs({"lmis", "largermacro", "largermacroiconselection"}) do
 	_G["SLASH_LARGERMACROICONSELECTION"..i] = "/"..v
 end
 
-SlashCmdList.LARGERMACROICONSELECTION = function(msg, editbox)
+SlashCmdList.LARGERMACROICONSELECTION = function(msg)
 	local width, height = strmatch(msg, "(%d+)[^%d]+(%d+)")
 	width = floor(tonumber(width) or 0)
 	height = floor(tonumber(height) or 0)
@@ -387,27 +323,27 @@ SlashCmdList.LARGERMACROICONSELECTION = function(msg, editbox)
 		db.height = height
 		
 		-- Update upvalues
-		previousbuttons = ICONS_SHOWN or 0 -- remember last amount
+		previousbuttons = ICONS_SHOWN or 0 -- Remember last amount
 		ICONS_PER_ROW = width
 		ICON_ROWS = height
 		ICONS_SHOWN = ICONS_PER_ROW * ICON_ROWS
 		
 		-- Update buttons
 		for k in pairs(frames) do
-			local sf = _G[k] -- The functions types on the same table should be skipped
-			if sf and active[sf] then -- Must wait for the initial posthook
+			local sf = _G[k] -- Get the frames, the function types on the same table are skipped
+			if sf and active[sf] then
+				f:UpdateButtons(sf)
+				
 				if sf:IsVisible() then
-					f:InitButtons(sf)
-					f:InitTextures(sf)
-					f:PopupFrame_Update(sf)
-				else -- Cant get textures if not visible, wait for OnShow
-					f:InitButtons(sf) -- We can set up buttons first
-					pendingChange[sf] = true
+					f:UpdateTextures(sf)
+					frames[sf].update()
+				else -- Cant get textures yet
+					pending[sf] = true
 				end
 			end
 		end
 	else
-		print(format("%s |cffFFFF00v%s|r", NAME, GetAddOnMetadata(NAME, "Version")))
+		print(format("%s |cffADFF2Fv%s|r", NAME, GetAddOnMetadata(NAME, "Version")))
 		print(L.USAGE)
 		print(L.USAGE_VALUES)
 		print(L.CURRENT_VALUES:format(db.width, db.height))

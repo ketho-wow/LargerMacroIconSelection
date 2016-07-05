@@ -27,11 +27,16 @@ local L = {
 	},
 	ruRU = {
 	},
-	zhCN = {
-	},
+	--zhCN = {},
 	zhTW = {
+		CURRENT_VALUES = "目前寬度是 %d 以及高度是 %d",
+		SETTING_VALUES = "設置巨集圖標選擇寬度為%d及高度為%d",
+		USAGE = "使用：/lmis width height",
+		USAGE_VALUES = "寬度必須等於或大於5，高度必須等於或大於4。",
 	},
 }
+
+L.zhCN = L.zhTW
 
 S.L = setmetatable(L[GetLocale()] or L.enUS, {__index = function(t, k)
 	local v = rawget(L.enUS, k) or k
