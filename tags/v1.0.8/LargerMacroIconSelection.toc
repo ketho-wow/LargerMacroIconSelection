@@ -1,0 +1,10 @@
+## Interface: 70000
+## Title: LargerMacroIconSelection
+## Version: 1.0.8
+## Author: Xinhuan
+## Notes: Shows you a much bigger icon selection frame
+## SavedVariables: LargerMacroIconSelectionDB
+## X-Email: xinhuan AT gmail DOT com
+
+Locales.lua
+LargerMacroIconSelection.lua
