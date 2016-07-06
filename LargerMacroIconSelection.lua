@@ -1,6 +1,6 @@
 --[[
-LargerMacroIconSelection v1.0.7
-5th July 2016
+LargerMacroIconSelection v1.0.8
+6th July 2016
 Copyright (C) 2016 Xinhuan
 
 Shows you a much bigger macro icon selection frame instead of the
@@ -28,9 +28,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 local NAME, S = ...
 local L = S.L -- Localization
 local db
-
-local isLegion = (select(4, GetBuildInfo()) >= 70000)
-local blp = isLegion and ".blp" or "" -- GetTexture() includes ".blp" in Legion
 
 local defaults = {
 	width = 10,
@@ -72,7 +69,7 @@ local frames = {
 			button = "GuildBankPopupButton",
 			template = "GuildBankPopupButtonTemplate",
 			update = GuildBankPopupFrame_Update,
-			extrawidth = 4, -- GuildBank is slightly thinner
+			extrawidth = 8, -- GuildBank is slightly thinner
 		}
 	end,
 }
@@ -153,10 +150,19 @@ function f:Initialize(sf)
 	end
 	sf.largertexture1 = sf:CreateTexture(nil, "BACKGROUND") -- Scrollframe texture
 	
+	-- Make movable
+	popup:SetMovable(true)
+	popup:SetClampedToScreen(true)
+	popup:SetFrameStrata("HIGH") -- up from "Medium", GearManager fix
+	
+	popup:EnableMouse(true) --  GearManager fix
+	popup:RegisterForDrag("LeftButton")
+	popup:SetScript("OnDragStart", popup.StartMoving)
+	popup:SetScript("OnDragStop", popup.StopMovingOrSizing)
+	
 	-- Add buttons, move textures
 	self:UpdateButtons(sf)
 	self:UpdateTextures(sf)
-	frames[sf].update() -- Initialized after OnShow, so not all icons are properly shown; force update
 end
 
 -- Initialization that should be called when the width/height values change
@@ -184,6 +190,7 @@ function f:UpdateButtons(sf)
 			end
 		end
 		
+		-- Position buttons
 		b:ClearAllPoints()
 		if i % ICONS_PER_ROW == 1 then
 			b:SetPoint("TOPLEFT", _G[button..(i-ICONS_PER_ROW)], "BOTTOMLEFT", 0, -8)
@@ -206,7 +213,7 @@ function f:UpdateTextures(sf)
 	local button = frames[sf].button
 	
 	-- Calculate the extra width and height due to the new size
-	local extrawidth = (_G[button.."1"]:GetWidth() + 10) * (ICONS_PER_ROW - origNum[sf].icons_per_row) + (frames[sf].extrawidth or -6)
+	local extrawidth = (_G[button.."1"]:GetWidth() + 10) * (ICONS_PER_ROW - origNum[sf].icons_per_row) + (frames[sf].extrawidth or -2)
 	local extraheight = (_G[button.."1"]:GetHeight() + 8) * (ICON_ROWS - origNum[sf].icon_rows) + 2
 	
 	-- Resize the frames
@@ -224,35 +231,35 @@ function f:UpdateTextures(sf)
 		if child.GetTexture then
 			local texture = child:GetTexture()
 			
-			if texture == "Interface\\MacroFrame\\MacroPopup-TopLeft"..blp then
-				popup.largertexture1:SetTexture("Interface\\MacroFrame\\MacroPopup-TopLeft")
+			if texture == "Interface\\MacroFrame\\MacroPopup-TopLeft" then
+				popup.largertexture1:SetTexture(texture)
 				popup.largertexture1:SetTexCoord(0.5, 0.7, 0, frames[sf].topcoords or 1) 
 				popup.largertexture1:SetWidth(extrawidth)
 				popup.largertexture1:SetHeight(child:GetHeight())
 				popup.largertexture1:ClearAllPoints()
 				popup.largertexture1:SetPoint("TOPLEFT", child, "TOPRIGHT") -- top side
 
-				popup.largertexture2:SetTexture("Interface\\MacroFrame\\MacroPopup-TopLeft")
+				popup.largertexture2:SetTexture(texture)
 				popup.largertexture2:SetTexCoord(0, 1, 0.5, 0.7)
 				popup.largertexture2:SetWidth(child:GetWidth())
 				popup.largertexture2:SetHeight(extraheight)
 				popup.largertexture2:ClearAllPoints()
 				popup.largertexture2:SetPoint("TOPLEFT", child, "BOTTOMLEFT") -- left side
 
-				popup.largertexture3:SetTexture("Interface\\MacroFrame\\MacroPopup-TopLeft")
+				popup.largertexture3:SetTexture(texture)
 				popup.largertexture3:SetTexCoord(0.5, 0.7, 0.5, 0.7)
 				popup.largertexture3:SetWidth(extrawidth)
 				popup.largertexture3:SetHeight(extraheight)
 				popup.largertexture3:ClearAllPoints()
 				popup.largertexture3:SetPoint("TOPLEFT", child, "BOTTOMRIGHT") -- middle
 				
-			elseif texture == "Interface\\MacroFrame\\MacroPopup-TopRight"..blp then
+			elseif texture == "Interface\\MacroFrame\\MacroPopup-TopRight" then
 				if not isGuildBank then
 					child:ClearAllPoints()
 					child:SetPoint("TOPRIGHT", 23, 0)
 				end
 				
-			elseif texture == "Interface\\MacroFrame\\MacroPopup-BotLeft"..blp then
+			elseif texture == "Interface\\MacroFrame\\MacroPopup-BotLeft" then
 				if not isGuildBank then
 					child:ClearAllPoints() -- Resize this one
 					child:SetPoint("BOTTOMLEFT", 0, -21)
@@ -264,7 +271,7 @@ function f:UpdateTextures(sf)
 				popup.largertexture6:ClearAllPoints()
 				popup.largertexture6:SetPoint("BOTTOMLEFT", child, "BOTTOMRIGHT")
 				
-			elseif texture == "Interface\\MacroFrame\\MacroPopup-BotRight"..blp then
+			elseif texture == "Interface\\MacroFrame\\MacroPopup-BotRight" then
 				if not isGuildBank then
 					child:ClearAllPoints()
 					child:SetPoint("BOTTOMRIGHT", 23, -21)
@@ -303,6 +310,17 @@ function f:UpdateTextures(sf)
 			end
 		end
 	end
+	
+	-- Initialized after OnShow, so not all icons are properly shown; force update
+	frames[sf].update()
+end
+
+local function MaxSize(v, maxValue, str)
+	if v > maxValue then
+		print(format("%s |cffFFFF00%d|r is too large!", str, v))
+		v = maxValue
+	end
+	return v
 end
 
 -- Slash commands
@@ -316,6 +334,10 @@ SlashCmdList.LARGERMACROICONSELECTION = function(msg)
 	height = floor(tonumber(height) or 0)
 	
 	if width >= 5 and height >= 4 then -- sanitize
+		-- Avoid outgrowing the screen (1920x1080, normal UI Scale)
+		width = MaxSize(width, 40, "Width")
+		height = MaxSize(height, 21, "Height")
+		
 		print(L.SETTING_VALUES:format(width, height))
 		
 		-- Update db
@@ -336,7 +358,6 @@ SlashCmdList.LARGERMACROICONSELECTION = function(msg)
 				
 				if sf:IsVisible() then
 					f:UpdateTextures(sf)
-					frames[sf].update()
 				else -- Cant get textures yet
 					pending[sf] = true
 				end
