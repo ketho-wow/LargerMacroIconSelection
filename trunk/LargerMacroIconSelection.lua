@@ -1,5 +1,5 @@
 --[[
-LargerMacroIconSelection v1.0.8
+LargerMacroIconSelection v1.0.9
 6th July 2016
 Copyright (C) 2016 Xinhuan
 
@@ -40,7 +40,6 @@ local previousbuttons = 0
 
 local popup_regions, sf_regions = {}, {}
 local origSize, origNum = {}, {}
-local active, pending = {}, {}
 
 local frames = {
 	MacroPopupScrollFrame = function() return {
@@ -85,39 +84,22 @@ function f:OnEvent(event, addon)
 		ICON_ROWS = db.height
 		ICONS_SHOWN = ICONS_PER_ROW * ICON_ROWS
 		
-		self:SetHook(GearManagerDialogPopupScrollFrame)
+		self:Initialize(GearManagerDialogPopupScrollFrame)
 		
 		if IsAddOnLoaded("Blizzard_MacroUI") then -- Someone else made it load before us
-			self:SetHook(MacroPopupScrollFrame)
+			self:Initialize(MacroPopupScrollFrame)
 		end
 		
 	elseif addon == "Blizzard_MacroUI" then
-		self:SetHook(MacroPopupScrollFrame)
+		self:Initialize(MacroPopupScrollFrame)
 	elseif addon == "Blizzard_GuildBankUI" then
 		if not IsGuildLeader() then return end -- No access to guild bank tabs
-		self:SetHook(GuildBankPopupScrollFrame)
+		self:Initialize(GuildBankPopupScrollFrame)
 	end
 end
 
 f:RegisterEvent("ADDON_LOADED")
 f:SetScript("OnEvent", f.OnEvent)
-
--- Cant get the textures yet because of the releaseUITextures cvar, hook OnShow
-function f:SetHook(sf)
-	local popup = sf:GetParent()
-	
-	popup:HookScript("OnShow", function()
-		if pending[sf] then -- Size was changed
-			self:UpdateTextures(sf) -- Textures available now
-			pending[sf] = false
-		elseif active[sf] then -- Nothing to change
-			return
-		else
-			self:Initialize(sf)
-			active[sf] = true
-		end
-	end)
-end
 
 function f:Initialize(sf)
 	local popup = sf:GetParent()
@@ -310,9 +292,6 @@ function f:UpdateTextures(sf)
 			end
 		end
 	end
-	
-	-- Initialized after OnShow, so not all icons are properly shown; force update
-	frames[sf].update()
 end
 
 local function MaxSize(v, maxValue, str)
@@ -353,13 +332,11 @@ SlashCmdList.LARGERMACROICONSELECTION = function(msg)
 		-- Update buttons
 		for k in pairs(frames) do
 			local sf = _G[k] -- Get the frames, the function types on the same table are skipped
-			if sf and active[sf] then
+			if sf then
 				f:UpdateButtons(sf)
-				
-				if sf:IsVisible() then
-					f:UpdateTextures(sf)
-				else -- Cant get textures yet
-					pending[sf] = true
+				f:UpdateTextures(sf)
+				if sf:IsVisible() then -- force update
+					frames[sf].update()
 				end
 			end
 		end

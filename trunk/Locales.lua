@@ -31,7 +31,7 @@ local L = {
 	zhTW = {
 		CURRENT_VALUES = "目前寬度是 %d 以及高度是 %d",
 		SETTING_VALUES = "設置巨集圖標選擇寬度為%d及高度為%d",
-		USAGE = "使用：/lmis width height",
+		USAGE = "使用：/lmis 寬 高",
 		USAGE_VALUES = "寬度必須等於或大於5，高度必須等於或大於4。",
 	},
 }

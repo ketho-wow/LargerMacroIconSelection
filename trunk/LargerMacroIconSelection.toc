@@ -1,6 +1,6 @@
 ## Interface: 70000
 ## Title: LargerMacroIconSelection
-## Version: 1.0.8
+## Version: 1.0.9
 ## Author: Xinhuan
 ## Notes: Shows you a much bigger icon selection frame
 ## SavedVariables: LargerMacroIconSelectionDB
