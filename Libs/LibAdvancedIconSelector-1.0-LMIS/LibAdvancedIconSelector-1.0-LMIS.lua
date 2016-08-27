@@ -1,4 +1,4 @@
---[[========================================================================================
+﻿--[[========================================================================================
       LibAdvancedIconSelector provides a searchable icon selection GUI to World
       of Warcraft addons.
       
@@ -30,10 +30,13 @@
       aren't going to break someone else's addon!
     ========================================================================================]]
 
+-- FileData gets added to the shared table
+local _, S = ...
+
 local DEBUG = false
 if DEBUG and LibDebug then LibDebug() end
 
-local MAJOR_VERSION = "LibAdvancedIconSelector-1.0"
+local MAJOR_VERSION = "LibAdvancedIconSelector-1.0-LMIS"
 local MINOR_VERSION = 14			-- (do not call GetAddOnMetaData)
 
 if not LibStub then error(MAJOR_VERSION .. " requires LibStub to operate") end
@@ -1019,9 +1022,9 @@ function Helpers.CreateDefaultSection(name)
 	if name == "DynamicIcon" then
 		return { count = 1, GetIconInfo = function(index) return index, "Dynamic", "INV_Misc_QuestionMark" end }
 	elseif name == "MacroIcons" then
-		return { count = #MACRO_ICON_FILENAMES, GetIconInfo = function(index) return index, "Macro", MACRO_ICON_FILENAMES[index] end }
+		return { count = #MACRO_ICON_FILENAMES, GetIconInfo = function(index) local id = MACRO_ICON_FILENAMES[index]; return index, "Macro", S.FileData[id] or id, id end}
 	elseif name == "ItemIcons" then
-		return { count = #ITEM_ICON_FILENAMES, GetIconInfo = function(index) return index, "Item", ITEM_ICON_FILENAMES[index] end }
+		return { count = #ITEM_ICON_FILENAMES, GetIconInfo = function(index) local id = ITEM_ICON_FILENAMES[index]; return index, "Item", S.FileData[id] or id, id end }
 	end
 end
 
@@ -1174,13 +1177,13 @@ function SearchObject:private_OnSearchTick()
 			break
 		end
 
-		local id, kind, texture = self:GetIconInfo(self.searchIndex)
+		local id, kind, texture, FileDataID = self:GetIconInfo(self.searchIndex)
 		if self.OnIconScanned then self:OnIconScanned(texture, self.searchIndex, id, kind) end
 
 		if texture then
 			local keywordString = lib:LookupKeywords(texture)
 			if self:private_Matches(texture, keywordString, self.parsedParameter) then
-				if self.OnSearchResultAdded then self:OnSearchResultAdded(texture, self.searchIndex, id, kind) end
+				if self.OnSearchResultAdded then self:OnSearchResultAdded(texture, self.searchIndex, id, kind, FileDataID) end
 			end
 		end
 	end
