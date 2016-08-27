@@ -1,10 +1,19 @@
 ## Interface: 70000
 ## Title: LargerMacroIconSelection
-## Version: 1.0.9
+## Version: 1.1.0
 ## Author: Xinhuan
 ## Notes: Shows you a much bigger icon selection frame
 ## SavedVariables: LargerMacroIconSelectionDB
 ## X-Email: xinhuan AT gmail DOT com
+
+#@no-lib-strip@
+Libs\LibStub\LibStub.lua
+Libs\AceTimer-3.0\AceTimer-3.0.xml
+Libs\AceLocale-3.0\AceLocale-3.0.xml
+#@end-no-lib-strip@
+
+Libs\LibAdvancedIconSelector-1.0-LMIS\enUS.lua
+Libs\LibAdvancedIconSelector-1.0-LMIS\LibAdvancedIconSelector-1.0-LMIS.lua
 
 Locales.lua
 LargerMacroIconSelection.lua

@@ -1,0 +1,10 @@
+## Interface: 70000
+## Title: LargerMacroIconSelectionData
+## Version: 7.0.3.22267
+## Author: Xinhuan
+## Notes: FileData for LargerMacroIconSelection
+## LoadOnDemand: 1
+## RequiredDeps: LargerMacroIconSelection
+## X-Email: xinhuan AT gmail DOT com
+
+FileData.lua
