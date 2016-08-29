@@ -1,15 +1,7 @@
 --[[
-LargerMacroIconSelection v1.1.0
-27th August 2016
+LargerMacroIconSelection
 Copyright (C) 2016 Xinhuan, Ketho
 
-Shows you a much bigger macro icon selection frame instead of the
-standard 5x4 one.
-
-Slash commands:
-/lmis width height
-
------
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
@@ -24,15 +16,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ]]
 
--- Note: learned a lot from Expanded Macro Selection (EMS) and Macro Toolkit
 local LMIS = CreateFrame("Frame", "LargerMacroIconSelection")
 local LibAIS = LibStub("LibAdvancedIconSelector-1.0-LMIS")
 
 local NAME, S = ...
-local L = S.L -- Localization
+local L = S.L
 local FileData
 local db
-LMIS.S = S -- for LibAIS to read FileData
+LMIS.S = S
 
 -- Local constants
 local ICONS_PER_ROW, ICON_ROWS, ICONS_SHOWN
@@ -47,7 +38,7 @@ local searchIcons = {}
 
 local GB_ICON_FILENAMES
 
--- put this in global namespace for consistency/simplicity
+-- Put this in global namespace for consistency/simplicity
 function GetGuildBankIconInfo(index)
 	return GB_ICON_FILENAMES[index]
 end
@@ -57,7 +48,7 @@ local defaults = {
 	height = 10,
 }
 
--- sometimes we need the variable name instead of value/pointer
+-- Sometimes we need the variable name instead of value/pointer
 local frames = {
 	MacroPopupScrollFrame = function() return {
 			icons_per_row = "NUM_ICONS_PER_ROW", -- 5
@@ -69,6 +60,7 @@ local frames = {
 			template = "MacroPopupButtonTemplate",
 			update = "MacroPopupFrame_Update",
 			okaybutton = MacroPopupOkayButton,
+			extrawidth = -2,
 		}
 	end,
 	GearManagerDialogPopupScrollFrame = function() return {
@@ -81,6 +73,7 @@ local frames = {
 			template = "GearSetPopupButtonTemplate",
 			update = "GearManagerDialogPopup_Update",
 			okaybutton = GearManagerDialogPopupOkay,
+			extrawidth = -2,
 			topcoords = 212/256, -- Different TexCoord
 		}
 	end,
@@ -89,25 +82,42 @@ local frames = {
 			icon_rows = "NUM_GUILDBANK_ICON_ROWS", -- 4
 			icons_shown = "NUM_GUILDBANK_ICONS_SHOWN", -- 16
 			icon_row_height = GUILDBANK_ICON_ROW_HEIGHT, -- 36
-			geticoninfo = "GetGuildBankIconInfo", -- custom; since its streamlined into the update func
+			geticoninfo = "GetGuildBankIconInfo", -- custom
 			button = "GuildBankPopupButton",
 			template = "GuildBankPopupButtonTemplate",
 			update = "GuildBankPopupFrame_Update",
 			okaybutton = GuildBankPopupOkayButton,
-			extrawidth = 8, -- GuildBank is slightly thinner
+			extrawidth = 8,
 		}
 	end,
 }
 
+-- Save memory by only loading FileData when needed
 local function LoadFileData()
 	if not FileData then
-		local loaded, reason = LoadAddOn("LargerMacroIconSelectionData")
+		local addon = "LargerMacroIconSelectionData"
+		local loaded, reason = LoadAddOn(addon)
 		
-		if not loaded and reason == "DISABLED" then
-			EnableAddOn("LargerMacroIconSelectionData", true)
-			LoadAddOn("LargerMacroIconSelectionData")
+		if not loaded then
+			if reason == "DISABLED" then
+				EnableAddOn(addon, true)
+				LoadAddOn(addon)
+			else
+				error(addon.." is "..reason)
+			end
 		end
 		FileData = S.FileData
+	end
+end
+
+local function UpdateSearchPopup(sf)
+	sf:SetVerticalScroll(0)
+	_G[frames[sf].update]()
+	-- The Blizzard UI cant remember the previously selected icon when starting a new search
+	-- Make this apparent by showing the question mark icon again
+	sf:GetParent().selectedIcon = nil -- offset id
+	if sf == MacroPopupScrollFrame then
+		MacroFrameSelectedMacroButtonIcon:SetTexture("Interface\\Icons\\INV_MISC_QUESTIONMARK")
 	end
 end
 
@@ -124,22 +134,29 @@ local function InitSearch()
 		end)
 		
 		searchObject:SetScript("OnSearchComplete", function(self)
-			-- The scrollframe is hidden when there are not enough icons, use the popupframe instead
-			if activeSearch and activeSearch:GetParent():IsShown() then
-				_G[frames[activeSearch].update]()
-			end
-			
-			local eb = activeSearch:GetParent().SearchBox
-			if not next(searchIcons) then
-				eb:SetTextColor(1, 0, 0)
-			else
-				eb:SetTextColor(1, 1, 1)
+			if activeSearch then
+				local popup = activeSearch:GetParent()
+				if not popup:IsShown() then return end
+				
+				if #searchIcons == 0 then
+					popup.SearchBox:SetTextColor(1, 0, 0)
+				else
+					popup.SearchBox:SetTextColor(1, 1, 1)
+				end
+				UpdateSearchPopup(activeSearch)
+				activeSearch = nil
 			end
 		end)
 	end
 end
 
-local f = LargerMacroIconSelection
+local function ClearSearch()
+	activeSearch = nil
+	wipe(searchIcons)
+	searchObject:Stop()
+end
+
+local f = LMIS
 
 function f:OnEvent(event, addon)
 	if addon == NAME then
@@ -177,18 +194,14 @@ function f:Initialize(sf)
 	popup:HookScript("OnShow", function()
 		if active[sf] then return end
 		
-		-- Only load file data when needed to save memory space
 		LoadFileData()
 		InitSearch()
-		
-		-- Get frame specific data
 		frames[sf] = frames[sf:GetName()]()
 		
 		-- Group the anonymous textures into a table before adding more regions
 		popup_regions[sf] = {popup:GetRegions()}
 		sf_regions[sf] = {sf:GetRegions()}
 		
-		-- Get original dimensions
 		origSize[sf] = {
 			width = popup:GetWidth(),
 			height = popup:GetHeight(),
@@ -196,7 +209,6 @@ function f:Initialize(sf)
 			sfheight = sf:GetHeight(),
 		}
 		
-		-- Get original amount of rows and columns
 		origNum[sf] = {
 			icons_per_row = _G[frames[sf].icons_per_row],
 			icon_rows = _G[frames[sf].icon_rows],
@@ -229,9 +241,10 @@ function f:Initialize(sf)
 		
 		if popup == GuildBankPopupFrame then
 			-- Can not make the Guild Bank support icon search; at least support GameTooltip info
+			-- Since the guild bank gets the icon info locally in the update func
 			GB_ICON_FILENAMES = {}
 			GB_ICON_FILENAMES[1] = "INV_MISC_QUESTIONMARK"
-
+			
 			GetLooseMacroItemIcons(GB_ICON_FILENAMES)
 			GetLooseMacroIcons(GB_ICON_FILENAMES)
 			GetMacroItemIcons(GB_ICON_FILENAMES)
@@ -239,19 +252,61 @@ function f:Initialize(sf)
 		else
 			local searchLabel = popup:CreateFontString()
 			searchLabel:SetFontObject("GameFontNormal")
+			searchLabel:SetPoint("BOTTOMLEFT", 20, 18)
 			searchLabel:SetText(SEARCH..":")
-			searchLabel:SetPoint("BOTTOMLEFT", 20, 19)
 			
 			local eb = CreateFrame("EditBox", "$parentEditBox", popup, "InputBoxTemplate")
-			eb:SetPoint("LEFT", searchLabel, "RIGHT", 7, -2)
+			eb:SetPoint("LEFT", searchLabel, "RIGHT", 7, -1)
 			eb:SetPoint("RIGHT", frames[sf].okaybutton, "LEFT", 0, 0)
 			eb:SetHeight(15)
 			popup.SearchBox = eb
 			
+			local linkLabel = popup:CreateFontString()
+			linkLabel:SetFontObject("GameFontNormal")
+			linkLabel:SetPoint("RIGHT", frames[sf].okaybutton, "LEFT", -5, 0)
+			linkLabel:SetTextColor(1, 1, 1)
+			
 			eb:SetScript("OnTextChanged", function(self, userInput)
-				if userInput then
-					searchObject:SetSearchParameter(self:GetText())
-					activeSearch = sf
+				if not userInput then return end
+				
+				local text = self:GetText()
+				
+				if strfind(text, "[:=]") then -- search by spell/item/achievement id
+					local link, id = text:lower():match("(%a+)[:=](%d+)")
+					local linkSearch
+					ClearSearch()
+					
+					if link == "spell" and id then
+						linkSearch = FileData[select(3, GetSpellInfo(id))]
+					elseif link == "item" and id then
+						linkSearch = FileData[select(5, GetItemInfoInstant(id))]
+					elseif link == "achievement" and id then
+						-- returns the texture path instead of FileDataID
+						local path = select(10, GetAchievementInfo(id))
+						linkSearch = path and path:lower():match("interface\\icons\\(.+)")
+					end
+					
+					if linkSearch then
+						searchIcons[1] = linkSearch
+						eb:SetTextColor(1, 1, 1)
+						linkLabel:SetText(linkSearch)
+					else
+						searchIcons[1] = "INV_MISC_QUESTIONMARK"
+						eb:SetTextColor(1, 0, 0)
+						linkLabel:SetText()
+					end
+					UpdateSearchPopup(sf)
+				else
+					eb:SetTextColor(1, 1, 1)
+					linkLabel:SetText()
+					
+					if #text:trim() > 0 then -- search by texture name
+						searchObject:SetSearchParameter(text)
+						activeSearch = sf
+					else -- blank
+						ClearSearch()
+						UpdateSearchPopup(sf)
+					end
 				end
 			end)
 			
@@ -260,14 +315,13 @@ function f:Initialize(sf)
 			end)
 			
 			popup:HookScript("OnHide", function()
-				-- Stop search and reset filters
-				searchObject:Stop()
-				activeSearch = nil
+				ClearSearch()
 				eb:SetText("")
-				wipe(searchIcons)
+				eb:SetTextColor(1, 1, 1)
+				linkLabel:SetText()
 			end)
-
-			-- Update scroll bar for the filtered icons
+			
+			-- Update scrollbar for the filtered icons
 			hooksecurefunc(frames[sf].update, function()
 				if #searchIcons > 0 then
 					FauxScrollFrame_Update(sf, ceil(#searchIcons / ICONS_PER_ROW), ICON_ROWS, frames[sf].icon_row_height)
@@ -288,7 +342,6 @@ function f:Initialize(sf)
 			end
 		end
 		
-		-- Add buttons, move textures
 		self:UpdateButtons(sf)
 		self:UpdateTextures(sf)
 		-- only initialized with OnShow, update again
@@ -298,19 +351,17 @@ function f:Initialize(sf)
 	end)
 end
 
--- Initialization that should be called when the width/height values change
 function f:UpdateButtons(sf)
 	local popup = sf:GetParent()
 	local button = frames[sf].button
 	local template = frames[sf].template
 	
 	-- Set the frame specific globals to the new values
-	local frame = frames[sf]
-	_G[frame.icons_per_row] = ICONS_PER_ROW
-	_G[frame.icon_rows] = ICON_ROWS
-	_G[frame.icons_shown] = ICONS_SHOWN
+	_G[frames[sf].icons_per_row] = ICONS_PER_ROW
+	_G[frames[sf].icon_rows] = ICON_ROWS
+	_G[frames[sf].icons_shown] = ICONS_SHOWN
 	
-	--print("UpdateButtons", ICONS_PER_ROW, ICON_ROWS)
+	local isGearManager = (popup == GearManagerDialogPopup)
 	
 	for i = 1, ICONS_SHOWN do
 		local b = _G[button..i]
@@ -319,8 +370,8 @@ function f:UpdateButtons(sf)
 			b = CreateFrame("CheckButton", button..i, popup, template)
 			b:SetID(i) -- Assign corresponding Id
 			
-			if popup == GearManagerDialogPopup then -- GearManager fix
-				tinsert(GearManagerDialogPopup.buttons, b)
+			if isGearManager then
+				tinsert(popup.buttons, b)
 			end
 		end
 		
@@ -341,7 +392,7 @@ function f:UpdateButtons(sf)
 			local id = FauxScrollFrame_GetOffset(sf)*ICONS_PER_ROW + self:GetID()
 			GameTooltip:AddLine(id)
 			
-			local texture = _G[frame.geticoninfo](id)
+			local texture = _G[frames[sf].geticoninfo](id)
 			GameTooltip:AddLine(type(texture) == "number" and FileData[texture] or texture, 1, 1, 1)
 			GameTooltip:Show()
 		end)
@@ -365,7 +416,7 @@ function f:UpdateTextures(sf)
 	local button = frames[sf].button
 	
 	-- Calculate the extra width and height due to the new size
-	local extrawidth = (_G[button.."1"]:GetWidth() + 10) * (ICONS_PER_ROW - origNum[sf].icons_per_row) + (frames[sf].extrawidth or -2)
+	local extrawidth = (_G[button.."1"]:GetWidth() + 10) * (ICONS_PER_ROW - origNum[sf].icons_per_row) + frames[sf].extrawidth
 	local extraheight = (_G[button.."1"]:GetHeight() + 8) * (ICON_ROWS - origNum[sf].icon_rows) + 2
 	
 	-- Resize the frames
@@ -377,8 +428,7 @@ function f:UpdateTextures(sf)
 	
 	local isGuildBank = (popup == GuildBankPopupFrame)
 	
-	-- Reposition the unnamed textures, as well as init
-	-- the extra ones to cover up the extra areas
+	-- Reposition the unnamed textures, as well as init the extra ones to cover up the extra areas
 	for _, child in ipairs(popup_regions[sf]) do
 		if child.GetTexture then
 			local texture = child:GetTexture()
@@ -464,8 +514,7 @@ function f:UpdateTextures(sf)
 	end
 end
 
--- Slash commands
-for i, v in ipairs({"lmis", "largermacro", "largermacroiconselection"}) do
+for i, v in pairs({"lmis", "largermacro", "largermacroicon", "largermacroiconselection"}) do
 	_G["SLASH_LARGERMACROICONSELECTION"..i] = "/"..v
 end
 
@@ -490,16 +539,15 @@ SlashCmdList.LARGERMACROICONSELECTION = function(msg)
 		
 		for k, v in pairs(frames) do
 			if type(v) == "table" then
-				local sf = k
-				f:UpdateButtons(sf)
-				f:UpdateTextures(sf)
-				if sf:GetParent():IsShown() then
-					_G[frames[sf].update]()
+				f:UpdateButtons(k)
+				f:UpdateTextures(k)
+				if k:GetParent():IsShown() then
+					_G[frames[k].update]()
 				end
 			end
 		end
 	else
-		print(format("%s |cffADFF2Fv%s|r", NAME, GetAddOnMetadata(NAME, "Version")))
+		print( format("%s |cffADFF2F%s|r", NAME, GetAddOnMetadata(NAME, "Version")) )
 		print(L.USAGE)
 		print(L.USAGE_VALUES)
 		print(L.CURRENT_VALUES:format(db.width, db.height))

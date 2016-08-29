@@ -1,4 +1,4 @@
-﻿--[[========================================================================================
+--[[========================================================================================
       LibAdvancedIconSelector provides a searchable icon selection GUI to World
       of Warcraft addons.
       
@@ -1022,9 +1022,9 @@ function Helpers.CreateDefaultSection(name)
 	if name == "DynamicIcon" then
 		return { count = 1, GetIconInfo = function(index) return index, "Dynamic", "INV_Misc_QuestionMark" end }
 	elseif name == "MacroIcons" then
-		return { count = #MACRO_ICON_FILENAMES, GetIconInfo = function(index) local id = MACRO_ICON_FILENAMES[index]; return index, "Macro", S.FileData[id] or id, id end}
+		return { count = #MACRO_ICON_FILENAMES, GetIconInfo = function(index) local id = MACRO_ICON_FILENAMES[index] return index, "Macro", S.FileData[id] or id, id end }
 	elseif name == "ItemIcons" then
-		return { count = #ITEM_ICON_FILENAMES, GetIconInfo = function(index) local id = ITEM_ICON_FILENAMES[index]; return index, "Item", S.FileData[id] or id, id end }
+		return { count = #ITEM_ICON_FILENAMES, GetIconInfo = function(index) local id = ITEM_ICON_FILENAMES[index] return index, "Item", S.FileData[id] or id, id end }
 	end
 end
 
