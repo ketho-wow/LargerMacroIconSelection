@@ -30,8 +30,7 @@
       aren't going to break someone else's addon!
     ========================================================================================]]
 
--- FileData gets added to the shared table
-local _, S = ...
+local _, S = ... -- FileData gets added to the shared table
 
 local DEBUG = false
 if DEBUG and LibDebug then LibDebug() end
@@ -56,6 +55,7 @@ local SCAN_PER_TICK = 1000			-- How many icons to scan per tick?
 local initialized = false
 local MACRO_ICON_FILENAMES = { }
 local ITEM_ICON_FILENAMES = { }
+local FILEDATA_ICON_FILENAMES = { }
 
 local keywordLibrary = nil			-- The currently loaded keyword library
 
@@ -159,6 +159,7 @@ function lib:Embed(addon)
 	addon.CreateSearch = lib.CreateSearch
 	addon.GetNumMacroIcons = lib.GetNumMacroIcons
 	addon.GetNumItemIcons = lib.GetNumItemIcons
+	addon.GetNumFileDataIcons = lib.GetNumFileDataIcons
 	addon.GetRevision = lib.GetRevision
 	addon.LoadKeywords = lib.LoadKeywords
 	addon.LookupKeywords = lib.LookupKeywords
@@ -192,6 +193,12 @@ end
 function lib:GetNumItemIcons()	-- (was removed from the API, but can still be useful when you don't need filenames)
 	Helpers.InitialInit()
 	return #ITEM_ICON_FILENAMES
+end
+
+-- Returns the number of "filedata" icons.  This may go slow the first time it is run if icon filenames aren't yet loaded.
+function lib:GetNumFileDataIcons()
+	Helpers.InitialInit()
+	return #FILEDATA_ICON_FILENAMES
 end
 
 -- Returns the revision # of the loaded library instance.
@@ -920,6 +927,11 @@ function Helpers.InitialInit()
 		initialized = true
 		GetMacroIcons(MACRO_ICON_FILENAMES)
 		GetMacroItemIcons(ITEM_ICON_FILENAMES)
+		
+		for k in pairs(S.FileData) do
+			tinsert(FILEDATA_ICON_FILENAMES, k)
+		end
+		sort(FILEDATA_ICON_FILENAMES) -- sort by FileDataID
 	end
 end
 
@@ -1025,6 +1037,8 @@ function Helpers.CreateDefaultSection(name)
 		return { count = #MACRO_ICON_FILENAMES, GetIconInfo = function(index) local id = MACRO_ICON_FILENAMES[index] return index, "Macro", S.FileData[id] or id, id end }
 	elseif name == "ItemIcons" then
 		return { count = #ITEM_ICON_FILENAMES, GetIconInfo = function(index) local id = ITEM_ICON_FILENAMES[index] return index, "Item", S.FileData[id] or id, id end }
+	elseif name == "FileDataIcons" then
+		return { count = #FILEDATA_ICON_FILENAMES, GetIconInfo = function(index) local id = FILEDATA_ICON_FILENAMES[index] return index, "FileData", S.FileData[id] or id, id end }
 	end
 end
 

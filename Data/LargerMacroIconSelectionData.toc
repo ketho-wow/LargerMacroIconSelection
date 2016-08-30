@@ -2,9 +2,8 @@
 ## Title: LargerMacroIconSelectionData
 ## Version: 7.0.3.22267
 ## Author: Xinhuan
-## Notes: Load on Demand FileData
+## Notes: Load on Demand Icon FileData
 ## LoadOnDemand: 1
-## RequiredDeps: LargerMacroIconSelection
 ## X-Email: xinhuan AT gmail DOT com
 
 FileData.lua

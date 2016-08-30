@@ -21,17 +21,14 @@ local LibAIS = LibStub("LibAdvancedIconSelector-1.0-LMIS")
 
 local NAME, S = ...
 local L = S.L
-local FileData
 local db
-LMIS.S = S
 
--- Local constants
 local ICONS_PER_ROW, ICON_ROWS, ICONS_SHOWN
 local previousbuttons = 0
 
 local popup_regions, sf_regions = {}, {}
 local origSize, origNum = {}, {}
-local active = {}
+local activeFrame = {}
 
 local searchObject, activeSearch
 local searchIcons = {}
@@ -43,9 +40,18 @@ function GetGuildBankIconInfo(index)
 	return GB_ICON_FILENAMES[index]
 end
 
+-- Remove custom/duplicate icons from icon packs
+--  until Blizzard fixes their non-FileDataID icon support
+GetLooseMacroItemIcons = function() end
+GetLooseMacroIcons = function() end
+
 local defaults = {
 	width = 10,
 	height = 10,
+}
+
+local LibAIS_options = {
+	sectionOrder = {"FileDataIcons"},
 }
 
 -- Sometimes we need the variable name instead of value/pointer
@@ -94,7 +100,7 @@ local frames = {
 
 -- Save memory by only loading FileData when needed
 local function LoadFileData()
-	if not FileData then
+	if not S.FileData then
 		local addon = "LargerMacroIconSelectionData"
 		local loaded, reason = LoadAddOn(addon)
 		
@@ -106,16 +112,29 @@ local function LoadFileData()
 				error(addon.." is "..reason)
 			end
 		end
-		FileData = S.FileData
+		S.FileData = LargerMacroIconSelectionData:GetFileData()
+	end
+end
+
+local function RefreshMouseFocus()
+	local focus = GetMouseFocus()
+	if focus and focus:GetObjectType() == "CheckButton" then
+		local parent = focus:GetParent()
+		-- Make sure we have the right buttons
+		if parent and frames[parent.ScrollFrame] then
+			focus:GetScript("OnEnter")(focus)
+		end
 	end
 end
 
 local function UpdateSearchPopup(sf)
-	sf:SetVerticalScroll(0)
+	sf:GetParent().selectedIcon = nil
+	sf:SetVerticalScroll(0)	
 	_G[frames[sf].update]()
-	-- The Blizzard UI cant remember the previously selected icon when starting a new search
+	RefreshMouseFocus()
+	-- The Blizzard UI remembers the ScrollFrame offset id instead
+	--  of the previously selected icon when starting a new search
 	-- Make this apparent by showing the question mark icon again
-	sf:GetParent().selectedIcon = nil -- offset id
 	if sf == MacroPopupScrollFrame then
 		MacroFrameSelectedMacroButtonIcon:SetTexture("Interface\\Icons\\INV_MISC_QUESTIONMARK")
 	end
@@ -123,7 +142,7 @@ end
 
 local function InitSearch()
 	if not searchObject then
-		searchObject = LibAIS:CreateSearch()
+		searchObject = LibAIS:CreateSearch(LibAIS_options)
 		
 		searchObject:SetScript("OnSearchStarted", function(self)
 			wipe(searchIcons)
@@ -189,10 +208,11 @@ f:SetScript("OnEvent", f.OnEvent)
 
 function f:Initialize(sf)
 	local popup = sf:GetParent()
+	popup.ScrollFrame = sf
 	
 	-- Only initialize when the popupframe shows
 	popup:HookScript("OnShow", function()
-		if active[sf] then return end
+		if activeFrame[sf] then return end
 		
 		LoadFileData()
 		InitSearch()
@@ -224,7 +244,7 @@ function f:Initialize(sf)
 		-- Movable
 		popup:SetMovable(true)
 		popup:SetClampedToScreen(true)
-		popup:SetFrameStrata("HIGH") -- up from "Medium", GearManager was hidden behind stuff
+		popup:SetFrameStrata("HIGH") -- Up from "Medium", GearManager was hidden behind stuff
 		
 		popup:EnableMouse(true) -- GearManager not mouse enabled
 		popup:RegisterForDrag("LeftButton")
@@ -232,12 +252,7 @@ function f:Initialize(sf)
 		popup:SetScript("OnDragStop", popup.StopMovingOrSizing)
 		
 		-- Update GameTooltip when scrollling
-		sf:HookScript("OnMouseWheel", function()
-			local focus = GetMouseFocus()
-			if focus and focus:GetObjectType() == "CheckButton" then
-				focus:GetScript("OnEnter")(focus)
-			end
-		end)
+		sf:HookScript("OnMouseWheel", RefreshMouseFocus)
 		
 		if popup == GuildBankPopupFrame then
 			-- Can not make the Guild Bank support icon search; at least support GameTooltip info
@@ -271,19 +286,21 @@ function f:Initialize(sf)
 				
 				local text = self:GetText()
 				
-				if strfind(text, "[:=]") then -- search by spell/item/achievement id
-					local link, id = text:lower():match("(%a+)[:=](%d+)")
+				if strfind(text, "[:=]") then -- Search by spell/item/achievement id
+					local link, id, id2 = text:lower():match("(%a+)[:=](%d+)")
 					local linkSearch
 					ClearSearch()
 					
 					if link == "spell" and id then
-						linkSearch = FileData[select(3, GetSpellInfo(id))]
+						linkSearch = S.FileData[select(3, GetSpellInfo(id))]
 					elseif link == "item" and id then
-						linkSearch = FileData[select(5, GetItemInfoInstant(id))]
+						linkSearch = S.FileData[select(5, GetItemInfoInstant(id))]
 					elseif link == "achievement" and id then
-						-- returns the texture path instead of FileDataID
+						-- Returns the texture path instead of FileDataID
 						local path = select(10, GetAchievementInfo(id))
 						linkSearch = path and path:lower():match("interface\\icons\\(.+)")
+					elseif link == "filedata" and id then
+						linkSearch = S.FileData[tonumber(id)]
 					end
 					
 					if linkSearch then
@@ -300,10 +317,10 @@ function f:Initialize(sf)
 					eb:SetTextColor(1, 1, 1)
 					linkLabel:SetText()
 					
-					if #text:trim() > 0 then -- search by texture name
+					if #text > 0 then -- Search by texture name
 						searchObject:SetSearchParameter(text)
 						activeSearch = sf
-					else -- blank
+					else
 						ClearSearch()
 						UpdateSearchPopup(sf)
 					end
@@ -344,10 +361,10 @@ function f:Initialize(sf)
 		
 		self:UpdateButtons(sf)
 		self:UpdateTextures(sf)
-		-- only initialized with OnShow, update again
+		-- Only initialized with OnShow, update again
 		_G[frames[sf].update]()
 		
-		active[sf] = true
+		activeFrame[sf] = true
 	end)
 end
 
@@ -393,7 +410,7 @@ function f:UpdateButtons(sf)
 			GameTooltip:AddLine(id)
 			
 			local texture = _G[frames[sf].geticoninfo](id)
-			GameTooltip:AddLine(type(texture) == "number" and FileData[texture] or texture, 1, 1, 1)
+			GameTooltip:AddLine(type(texture) == "number" and S.FileData[texture] or texture, 1, 1, 1)
 			GameTooltip:Show()
 		end)
 		

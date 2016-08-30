@@ -1,7 +1,7 @@
 
 -- all textures under Interface/Icons/
 -- from https://www.townlong-yak.com/framexml/live/Helix/ArtTextureID.lua
-LargerMacroIconSelection.S.FileData = {
+local FileData = {
 [1000646]="INV_Bow_1h_DraenorChallenge_D_01",
 [1001489]="INV_Garrison_Blueprints1",
 [1001490]="INV_Garrison_Blueprints2",
@@ -16713,3 +16713,9 @@ LargerMacroIconSelection.S.FileData = {
 [999954]="INV_Knife_1h_DraenorChallenge_D_02",
 [999955]="INV_Knife_1h_DraenorRaid_D_02",
 }
+
+LargerMacroIconSelectionData = {}
+
+function LargerMacroIconSelectionData:GetFileData()
+	return FileData
+end
