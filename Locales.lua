@@ -18,6 +18,10 @@ local L = {
 	esMX = {
 	},
 	frFR = {
+		CURRENT_VALUES = "La largeur actuelle est %d et la hauteur actuelle est %d.",
+		SETTING_VALUES = "La sélection d'icône a maintenant une largeur de %d et un hauteur de %d.",
+		USAGE = "Utilisation : /lmis largeur hauteur",
+		USAGE_VALUES = "Largeur doit être 5 ou plus, hauteur doit être 4 ou plus.",
 	},
 	itIT = {
 	},

@@ -16,11 +16,13 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ]]
 
-local LMIS = CreateFrame("Frame", "LargerMacroIconSelection")
+LargerMacroIconSelection = CreateFrame("Frame")
+local f = LargerMacroIconSelection
 local LibAIS = LibStub("LibAdvancedIconSelector-1.0-LMIS")
 
 local NAME, S = ...
 local L = S.L
+local _G = _G
 local db
 
 local ICONS_PER_ROW, ICON_ROWS, ICONS_SHOWN
@@ -41,7 +43,7 @@ function GetGuildBankIconInfo(index)
 end
 
 -- Remove custom/duplicate icons from icon packs
---  until Blizzard fixes their non-FileDataID icon support
+-- until Blizzard fixes their non-FileDataID icon support
 GetLooseMacroItemIcons = function() end
 GetLooseMacroIcons = function() end
 
@@ -54,7 +56,6 @@ local LibAIS_options = {
 	sectionOrder = {"FileDataIcons"},
 }
 
--- Sometimes we need the variable name instead of value/pointer
 local frames = {
 	MacroPopupScrollFrame = function() return {
 			icons_per_row = "NUM_ICONS_PER_ROW", -- 5
@@ -99,9 +100,8 @@ local frames = {
 }
 
 -- Save memory by only loading FileData when needed
-local function LoadFileData()
+local function LoadFileData(addon)
 	if not S.FileData then
-		local addon = "LargerMacroIconSelectionData"
 		local loaded, reason = LoadAddOn(addon)
 		
 		if not loaded then
@@ -112,7 +112,7 @@ local function LoadFileData()
 				error(addon.." is "..reason)
 			end
 		end
-		S.FileData = LargerMacroIconSelectionData:GetFileData()
+		S.FileData = _G[addon]:GetFileData()
 	end
 end
 
@@ -120,7 +120,6 @@ local function RefreshMouseFocus()
 	local focus = GetMouseFocus()
 	if focus and focus:GetObjectType() == "CheckButton" then
 		local parent = focus:GetParent()
-		-- Make sure we have the right buttons
 		if parent and frames[parent.ScrollFrame] then
 			focus:GetScript("OnEnter")(focus)
 		end
@@ -129,12 +128,14 @@ end
 
 local function UpdateSearchPopup(sf)
 	sf:GetParent().selectedIcon = nil
-	sf:SetVerticalScroll(0)	
+	sf:SetVerticalScroll(0)
 	_G[frames[sf].update]()
+	if sf == GearManagerDialogPopupScrollFrame and #searchIcons > 0 then
+		f:UpdateButtons(sf, #searchIcons)
+	end
 	RefreshMouseFocus()
 	-- The Blizzard UI remembers the ScrollFrame offset id instead
-	--  of the previously selected icon when starting a new search
-	-- Make this apparent by showing the question mark icon again
+	-- of the previously selected icon when starting a new search
 	if sf == MacroPopupScrollFrame then
 		MacroFrameSelectedMacroButtonIcon:SetTexture("Interface\\Icons\\INV_MISC_QUESTIONMARK")
 	end
@@ -175,8 +176,6 @@ local function ClearSearch()
 	searchObject:Stop()
 end
 
-local f = LMIS
-
 function f:OnEvent(event, addon)
 	if addon == NAME then
 		LargerMacroIconSelectionDB = LargerMacroIconSelectionDB or CopyTable(defaults)
@@ -214,7 +213,7 @@ function f:Initialize(sf)
 	popup:HookScript("OnShow", function()
 		if activeFrame[sf] then return end
 		
-		LoadFileData()
+		LoadFileData("LargerMacroIconSelectionData")
 		InitSearch()
 		frames[sf] = frames[sf:GetName()]()
 		
@@ -260,8 +259,6 @@ function f:Initialize(sf)
 			GB_ICON_FILENAMES = {}
 			GB_ICON_FILENAMES[1] = "INV_MISC_QUESTIONMARK"
 			
-			GetLooseMacroItemIcons(GB_ICON_FILENAMES)
-			GetLooseMacroIcons(GB_ICON_FILENAMES)
 			GetMacroItemIcons(GB_ICON_FILENAMES)
 			GetMacroIcons(GB_ICON_FILENAMES)
 		else
@@ -278,7 +275,7 @@ function f:Initialize(sf)
 			
 			local linkLabel = popup:CreateFontString()
 			linkLabel:SetFontObject("GameFontNormal")
-			linkLabel:SetPoint("RIGHT", frames[sf].okaybutton, "LEFT", -5, 0)
+			linkLabel:SetPoint("RIGHT", frames[sf].okaybutton, "LEFT", -5, -1)
 			linkLabel:SetTextColor(1, 1, 1)
 			
 			eb:SetScript("OnTextChanged", function(self, userInput)
@@ -368,10 +365,13 @@ function f:Initialize(sf)
 	end)
 end
 
-function f:UpdateButtons(sf)
+function f:UpdateButtons(sf, amount)
 	local popup = sf:GetParent()
 	local button = frames[sf].button
 	local template = frames[sf].template
+	-- The GearManager does not like nil values
+	-- so we have to manually hide the buttons for them, at least when we show just a few icons
+	local numIcons = amount and min(amount, ICONS_SHOWN) or ICONS_SHOWN
 	
 	-- Set the frame specific globals to the new values
 	_G[frames[sf].icons_per_row] = ICONS_PER_ROW
@@ -380,7 +380,7 @@ function f:UpdateButtons(sf)
 	
 	local isGearManager = (popup == GearManagerDialogPopup)
 	
-	for i = 1, ICONS_SHOWN do
+	for i = 1, numIcons do
 		local b = _G[button..i]
 		
 		if not b then -- Create button
@@ -420,7 +420,7 @@ function f:UpdateButtons(sf)
 	end
 	
 	-- Hide any superfluous buttons
-	for i = ICONS_SHOWN + 1, previousbuttons do
+	for i = numIcons + 1, (amount and ICONS_SHOWN or previousbuttons) do
 		local b = _G[button..i]
 		if b then
 			b:Hide()
