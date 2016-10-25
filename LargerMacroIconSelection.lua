@@ -456,7 +456,7 @@ hooksecurefunc("ChatEdit_InsertLink", function(text)
 	if text then
 		for _, v in pairs({"MacroPopupFrame", "GearManagerDialogPopup", "GuildBankPopupFrame"}) do
 			local popup = _G[v]
-			if popup and popup.SearchBox:IsShown() then
+			if popup and popup.SearchBox and popup.SearchBox:IsVisible() then
 				popup.SearchBox:SetText(strmatch(text, "H(%l+:%d+)") or "")
 				break
 			end
