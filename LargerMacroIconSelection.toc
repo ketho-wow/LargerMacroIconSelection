@@ -1,10 +1,9 @@
-## Interface: 70000
+## Interface: 70100
 ## Title: LargerMacroIconSelection
 ## Version: @project-version@
 ## Author: Xinhuan, Ketho
 ## Notes: Shows you a much bigger icon selection frame
 ## SavedVariables: LargerMacroIconSelectionDB
-## X-Email: xinhuan AT gmail DOT com
 ## X-Embeds: LibAdvancedIconSelector-1.0
 
 #@no-lib-strip@

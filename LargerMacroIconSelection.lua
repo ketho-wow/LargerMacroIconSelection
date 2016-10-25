@@ -58,43 +58,42 @@ local LibAIS_options = {
 
 local frames = {
 	MacroPopupScrollFrame = function() return {
-			icons_per_row = "NUM_ICONS_PER_ROW", -- 5
-			icon_rows = "NUM_ICON_ROWS", -- 4
-			icons_shown = "NUM_MACRO_ICONS_SHOWN", -- 20
+			icons_per_row = "NUM_ICONS_PER_ROW", -- 10
+			icon_rows = "NUM_ICON_ROWS", -- 9
+			icons_shown = "NUM_MACRO_ICONS_SHOWN", -- 90
 			icon_row_height = MACRO_ICON_ROW_HEIGHT, -- 36
 			geticoninfo = "GetSpellorMacroIconInfo",
 			button = "MacroPopupButton",
 			template = "MacroPopupButtonTemplate",
 			update = "MacroPopupFrame_Update",
 			okaybutton = MacroPopupOkayButton,
-			extrawidth = -2,
+			editbox = MacroPopupEditBox,
 		}
 	end,
 	GearManagerDialogPopupScrollFrame = function() return {
-			icons_per_row = "NUM_GEARSET_ICONS_PER_ROW", -- 5
-			icon_rows = "NUM_GEARSET_ICON_ROWS", -- 3
-			icons_shown = "NUM_GEARSET_ICONS_SHOWN", -- 15
+			icons_per_row = "NUM_GEARSET_ICONS_PER_ROW", -- 10
+			icon_rows = "NUM_GEARSET_ICON_ROWS", -- 9
+			icons_shown = "NUM_GEARSET_ICONS_SHOWN", -- 90
 			icon_row_height = GEARSET_ICON_ROW_HEIGHT, -- 36
 			geticoninfo = "GetEquipmentSetIconInfo",
 			button = "GearManagerDialogPopupButton",
 			template = "GearSetPopupButtonTemplate",
 			update = "GearManagerDialogPopup_Update",
 			okaybutton = GearManagerDialogPopupOkay,
-			extrawidth = -2,
-			topcoords = 212/256, -- Different TexCoord
+			editbox = GearManagerDialogPopupEditBox,
 		}
 	end,
 	GuildBankPopupScrollFrame = function() return {
-			icons_per_row = "NUM_GUILDBANK_ICONS_PER_ROW", -- 4
-			icon_rows = "NUM_GUILDBANK_ICON_ROWS", -- 4
-			icons_shown = "NUM_GUILDBANK_ICONS_SHOWN", -- 16
+			icons_per_row = "NUM_GUILDBANK_ICONS_PER_ROW", -- 10
+			icon_rows = "NUM_GUILDBANK_ICON_ROWS", -- 9
+			icons_shown = "NUM_GUILDBANK_ICONS_SHOWN", -- 90
 			icon_row_height = GUILDBANK_ICON_ROW_HEIGHT, -- 36
 			geticoninfo = "GetGuildBankIconInfo", -- custom
 			button = "GuildBankPopupButton",
 			template = "GuildBankPopupButtonTemplate",
 			update = "GuildBankPopupFrame_Update",
 			okaybutton = GuildBankPopupOkayButton,
-			extrawidth = 8,
+			editbox = GuildBankPopupEditBox,
 		}
 	end,
 }
@@ -129,7 +128,12 @@ end
 local function UpdateSearchPopup(sf)
 	sf:GetParent().selectedIcon = nil
 	sf:SetVerticalScroll(0)
+	
+	-- Updating clears the EditBox; remember the macro name
+	local text = frames[sf].editbox:GetText()
 	_G[frames[sf].update]()
+	frames[sf].editbox:SetText(text)
+	
 	if sf == GearManagerDialogPopupScrollFrame and #searchIcons > 0 then
 		f:UpdateButtons(sf, #searchIcons)
 	end
@@ -234,12 +238,6 @@ function f:Initialize(sf)
 			icons_shown =  _G[frames[sf].icons_shown],
 		}
 		
-		-- Create extra background textures
-		for i = 1, 6 do
-			popup["largertexture"..i] = popup:CreateTexture(nil, "BACKGROUND")
-		end
-		sf.largertexture1 = sf:CreateTexture(nil, "BACKGROUND") -- Scrollframe texture
-		
 		-- Movable
 		popup:SetMovable(true)
 		popup:SetClampedToScreen(true)
@@ -262,29 +260,30 @@ function f:Initialize(sf)
 			GetMacroItemIcons(GB_ICON_FILENAMES)
 			GetMacroIcons(GB_ICON_FILENAMES)
 		else
-			local searchLabel = popup:CreateFontString()
-			searchLabel:SetFontObject("GameFontNormal")
-			searchLabel:SetPoint("BOTTOMLEFT", 20, 18)
-			searchLabel:SetText(SEARCH..":")
-			
-			local eb = CreateFrame("EditBox", "$parentEditBox", popup, "InputBoxTemplate")
-			eb:SetPoint("LEFT", searchLabel, "RIGHT", 7, -1)
+			local eb = CreateFrame("EditBox", "$parentSearchBox", popup, "InputBoxTemplate")
+			eb:SetPoint("BOTTOMLEFT", 70, 15)
 			eb:SetPoint("RIGHT", frames[sf].okaybutton, "LEFT", 0, 0)
 			eb:SetHeight(15)
+			eb:SetFrameLevel(70) -- FrameStrata or level changed in 7.1
 			popup.SearchBox = eb
 			
-			local linkLabel = popup:CreateFontString()
+			-- No idea why fontstrings are drawn below the popup frame in 7.1
+			-- Using the OVERLAY layer didnt help; workaround by parenting to editbox instead
+			local searchLabel = eb:CreateFontString()
+			searchLabel:SetFontObject("GameFontNormal")
+			searchLabel:SetPoint("RIGHT", eb, "LEFT", -5, 0)
+			searchLabel:SetText(SEARCH..":")
+			
+			local linkLabel = eb:CreateFontString()
 			linkLabel:SetFontObject("GameFontNormal")
 			linkLabel:SetPoint("RIGHT", frames[sf].okaybutton, "LEFT", -5, -1)
-			linkLabel:SetTextColor(1, 1, 1)
+			linkLabel:SetTextColor(.62, .62, .62)
 			
 			eb:SetScript("OnTextChanged", function(self, userInput)
-				if not userInput then return end
-				
 				local text = self:GetText()
 				
 				if strfind(text, "[:=]") then -- Search by spell/item/achievement id
-					local link, id, id2 = text:lower():match("(%a+)[:=](%d+)")
+					local link, id = text:lower():match("(%a+)[:=](%d+)")
 					local linkSearch
 					ClearSearch()
 					
@@ -324,8 +323,13 @@ function f:Initialize(sf)
 				end
 			end)
 			
-			eb:SetScript("OnEnterPressed", function(self)
-				self:ClearFocus()
+			-- Something changed in 7.1; :ClearFocus() on SearchBox does not work anymore(?)
+			eb:SetScript("OnEnterPressed", function()
+				frames[sf].editbox:SetFocus()
+			end)
+			
+			eb:SetScript("OnEscapePressed", function()
+				frames[sf].editbox:SetFocus()
 			end)
 			
 			popup:HookScript("OnHide", function()
@@ -428,13 +432,15 @@ function f:UpdateButtons(sf, amount)
 	end
 end
 
+-- In 7.1 Blizzard shows 90 icons, with 9th row half visible
+-- and an extra empty row as the very last row to make up for it
 function f:UpdateTextures(sf)	
 	local popup = sf:GetParent()
 	local button = frames[sf].button
 	
 	-- Calculate the extra width and height due to the new size
-	local extrawidth = (_G[button.."1"]:GetWidth() + 10) * (ICONS_PER_ROW - origNum[sf].icons_per_row) + frames[sf].extrawidth
-	local extraheight = (_G[button.."1"]:GetHeight() + 8) * (ICON_ROWS - origNum[sf].icon_rows) + 2
+	local extrawidth = (_G[button.."1"]:GetWidth() + 10) * (ICONS_PER_ROW - origNum[sf].icons_per_row)
+	local extraheight = (_G[button.."1"]:GetHeight() + 8) * (ICON_ROWS - origNum[sf].icon_rows) + 25
 	
 	-- Resize the frames
 	local size = origSize[sf]
@@ -442,94 +448,21 @@ function f:UpdateTextures(sf)
 	popup:SetHeight(size.height + extraheight)
 	sf:SetWidth(size.sfwidth + extrawidth)
 	sf:SetHeight(size.sfheight + extraheight)
-	
-	local isGuildBank = (popup == GuildBankPopupFrame)
-	
-	-- Reposition the unnamed textures, as well as init the extra ones to cover up the extra areas
-	for _, child in ipairs(popup_regions[sf]) do
-		if child.GetTexture then
-			local texture = child:GetTexture()
-			
-			if texture == "Interface\\MacroFrame\\MacroPopup-TopLeft" then
-				popup.largertexture1:SetTexture(texture)
-				popup.largertexture1:SetTexCoord(0.5, 0.7, 0, frames[sf].topcoords or 1) 
-				popup.largertexture1:SetWidth(extrawidth)
-				popup.largertexture1:SetHeight(child:GetHeight())
-				popup.largertexture1:ClearAllPoints()
-				popup.largertexture1:SetPoint("TOPLEFT", child, "TOPRIGHT") -- top side
-
-				popup.largertexture2:SetTexture(texture)
-				popup.largertexture2:SetTexCoord(0, 1, 0.5, 0.7)
-				popup.largertexture2:SetWidth(child:GetWidth())
-				popup.largertexture2:SetHeight(extraheight)
-				popup.largertexture2:ClearAllPoints()
-				popup.largertexture2:SetPoint("TOPLEFT", child, "BOTTOMLEFT") -- left side
-
-				popup.largertexture3:SetTexture(texture)
-				popup.largertexture3:SetTexCoord(0.5, 0.7, 0.5, 0.7)
-				popup.largertexture3:SetWidth(extrawidth)
-				popup.largertexture3:SetHeight(extraheight)
-				popup.largertexture3:ClearAllPoints()
-				popup.largertexture3:SetPoint("TOPLEFT", child, "BOTTOMRIGHT") -- middle
-				
-			elseif texture == "Interface\\MacroFrame\\MacroPopup-TopRight" then
-				if not isGuildBank then
-					child:ClearAllPoints()
-					child:SetPoint("TOPRIGHT", 23, 0)
-				end
-				
-			elseif texture == "Interface\\MacroFrame\\MacroPopup-BotLeft" then
-				if not isGuildBank then
-					child:ClearAllPoints() -- Resize this one
-					child:SetPoint("BOTTOMLEFT", 0, -21)
-					child:SetWidth(256 * 0.1)
-					child:SetTexCoord(0, 0.1, 0, 1)
-				end
-
-				popup.largertexture5:SetWidth(256 * 0.55)
-				popup.largertexture6:ClearAllPoints()
-				popup.largertexture6:SetPoint("BOTTOMLEFT", child, "BOTTOMRIGHT")
-				
-			elseif texture == "Interface\\MacroFrame\\MacroPopup-BotRight" then
-				if not isGuildBank then
-					child:ClearAllPoints()
-					child:SetPoint("BOTTOMRIGHT", 23, -21)
-				end
-
-				popup.largertexture4:SetTexture("Interface\\MacroFrame\\MacroPopup-TopRight")
-				popup.largertexture4:SetTexCoord(0, 1, 0.5, 0.7)
-				popup.largertexture4:SetWidth(child:GetWidth())
-				popup.largertexture4:SetHeight(extraheight)
-				popup.largertexture4:ClearAllPoints()
-				popup.largertexture4:SetPoint("BOTTOMRIGHT", child, "TOPRIGHT") -- right side
-
-				popup.largertexture5:SetTexture("Interface\\MacroFrame\\MacroPopup-BotLeft")
-				popup.largertexture5:SetTexCoord(0.45, 1, 0, 1)
-				popup.largertexture5:SetHeight(child:GetHeight())
-				popup.largertexture5:ClearAllPoints()
-				popup.largertexture5:SetPoint("BOTTOMRIGHT", child, "BOTTOMLEFT") -- bottom side1
-
-				popup.largertexture6:SetTexture("Interface\\MacroFrame\\MacroPopup-BotLeft")
-				popup.largertexture6:SetTexCoord(0.1, 0.45, 0, 1)
-				popup.largertexture6:SetPoint("BOTTOMRIGHT", popup.largertexture5, "BOTTOMLEFT") -- bottom side2
-			end
-		end
-	end
-	
-	-- And some more for the scrollframe
-	for _, child in ipairs(sf_regions[sf]) do
-		if child.GetTexture then
-			local a, b, c, d = child:GetTexCoord()
-			if c - 0.0234375 < 0.01 then
-				sf.largertexture1:SetTexture("Interface\\ClassTrainerFrame\\UI-ClassTrainer-ScrollBar")
-				sf.largertexture1:SetTexCoord(0, 0.46875, 0.2, 0.9)
-				sf.largertexture1:SetWidth(30)
-				sf.largertexture1:SetHeight(extraheight)
-				sf.largertexture1:SetPoint("TOPLEFT", child, "BOTTOMLEFT")
-			end
-		end
-	end
 end
+
+-- Support shift-clicking links to the search box
+-- maybe also hide StackSplitFrame but will have to hook ContainerFrameItemButton_OnModifiedClick
+hooksecurefunc("ChatEdit_InsertLink", function(text)
+	if text then
+		for _, v in pairs({"MacroPopupFrame", "GearManagerDialogPopup", "GuildBankPopupFrame"}) do
+			local popup = _G[v]
+			if popup and popup.SearchBox:IsShown() then
+				popup.SearchBox:SetText(strmatch(text, "H(%l+:%d+)") or "")
+				break
+			end
+		end
+	end
+end)
 
 for i, v in pairs({"lmis", "largermacro", "largermacroicon", "largermacroiconselection"}) do
 	_G["SLASH_LARGERMACROICONSELECTION"..i] = "/"..v

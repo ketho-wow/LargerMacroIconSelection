@@ -1,9 +1,8 @@
 ## Interface: 70000
 ## Title: LargerMacroIconSelectionData
-## Version: 7.0.3.22267
+## Version: 7.1.0.22864
 ## Author: Xinhuan, Ketho
 ## Notes: Load on Demand Icon FileData
 ## LoadOnDemand: 1
-## X-Email: xinhuan AT gmail DOT com
 
 FileData.lua
