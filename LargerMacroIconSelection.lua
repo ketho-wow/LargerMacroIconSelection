@@ -358,6 +358,16 @@ function f:Initialize(sf)
 					return oldGetIconInfo(index)
 				end
 			end
+			
+			-- Support shift-clicking links to the search box
+			-- maybe also hide StackSplitFrame but will have to hook ContainerFrameItemButton_OnModifiedClick
+			hooksecurefunc("ChatEdit_InsertLink", function(text)
+				if text then
+					if eb:IsVisible() then
+						eb:SetText(strmatch(text, "H(%l+:%d+)") or "")
+					end
+				end
+			end)
 		end
 		
 		self:UpdateButtons(sf)
@@ -440,7 +450,7 @@ function f:UpdateTextures(sf)
 	
 	-- Calculate the extra width and height due to the new size
 	local extrawidth = (_G[button.."1"]:GetWidth() + 10) * (ICONS_PER_ROW - origNum[sf].icons_per_row)
-	local extraheight = (_G[button.."1"]:GetHeight() + 8) * (ICON_ROWS - origNum[sf].icon_rows) + 25
+	local extraheight = (_G[button.."1"]:GetHeight() + 8) * (ICON_ROWS - origNum[sf].icon_rows) + 30
 	
 	-- Resize the frames
 	local size = origSize[sf]
@@ -449,20 +459,6 @@ function f:UpdateTextures(sf)
 	sf:SetWidth(size.sfwidth + extrawidth)
 	sf:SetHeight(size.sfheight + extraheight)
 end
-
--- Support shift-clicking links to the search box
--- maybe also hide StackSplitFrame but will have to hook ContainerFrameItemButton_OnModifiedClick
-hooksecurefunc("ChatEdit_InsertLink", function(text)
-	if text then
-		for _, v in pairs({"MacroPopupFrame", "GearManagerDialogPopup", "GuildBankPopupFrame"}) do
-			local popup = _G[v]
-			if popup and popup.SearchBox and popup.SearchBox:IsVisible() then
-				popup.SearchBox:SetText(strmatch(text, "H(%l+:%d+)") or "")
-				break
-			end
-		end
-	end
-end)
 
 for i, v in pairs({"lmis", "largermacro", "largermacroicon", "largermacroiconselection"}) do
 	_G["SLASH_LARGERMACROICONSELECTION"..i] = "/"..v
