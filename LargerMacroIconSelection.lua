@@ -115,7 +115,7 @@ local function LoadFileData(addon)
 	end
 end
 
-local function RefreshMouseFocus()
+local function RefreshTooltip()
 	local focus = GetMouseFocus()
 	if focus and focus:GetObjectType() == "CheckButton" then
 		local parent = focus:GetParent()
@@ -137,7 +137,7 @@ local function UpdateSearchPopup(sf)
 	if sf == GearManagerDialogPopupScrollFrame and #searchIcons > 0 then
 		f:UpdateButtons(sf, #searchIcons)
 	end
-	RefreshMouseFocus()
+	RefreshTooltip()
 	-- The Blizzard UI remembers the ScrollFrame offset id instead
 	-- of the previously selected icon when starting a new search
 	if sf == MacroPopupScrollFrame then
@@ -249,7 +249,7 @@ function f:Initialize(sf)
 		popup:SetScript("OnDragStop", popup.StopMovingOrSizing)
 		
 		-- Update GameTooltip when scrollling
-		sf:HookScript("OnMouseWheel", RefreshMouseFocus)
+		sf:HookScript("OnMouseWheel", RefreshTooltip)
 		
 		if popup == GuildBankPopupFrame then
 			-- Can not make the Guild Bank support icon search; at least support GameTooltip info
@@ -264,7 +264,7 @@ function f:Initialize(sf)
 			eb:SetPoint("BOTTOMLEFT", 70, 15)
 			eb:SetPoint("RIGHT", frames[sf].okaybutton, "LEFT", 0, 0)
 			eb:SetHeight(15)
-			eb:SetFrameLevel(70) -- FrameStrata or level changed in 7.1
+			eb:SetFrameLevel(250) -- FrameStrata or level changed in 7.1
 			popup.SearchBox = eb
 			
 			-- No idea why fontstrings are drawn below the popup frame in 7.1
