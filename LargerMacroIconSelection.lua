@@ -35,7 +35,7 @@ local activeFrame = {}
 local searchObject, activeSearch
 local searchIcons = {}
 
-local GB_ICON_FILENAMES
+local GB_ICON_FILENAMES_ORIGINAL
 
 -- Put this in global namespace for consistency/simplicity
 function GetGuildBankIconInfo(index)
@@ -115,7 +115,7 @@ local function LoadFileData(addon)
 	end
 end
 
-local function RefreshTooltip()
+local function RefreshMouseFocus()
 	local focus = GetMouseFocus()
 	if focus and focus:GetObjectType() == "CheckButton" then
 		local parent = focus:GetParent()
@@ -137,7 +137,7 @@ local function UpdateSearchPopup(sf)
 	if sf == GearManagerDialogPopupScrollFrame and #searchIcons > 0 then
 		f:UpdateButtons(sf, #searchIcons)
 	end
-	RefreshTooltip()
+	RefreshMouseFocus()
 	-- The Blizzard UI remembers the ScrollFrame offset id instead
 	-- of the previously selected icon when starting a new search
 	if sf == MacroPopupScrollFrame then
@@ -162,6 +162,11 @@ local function InitSearch()
 				local popup = activeSearch:GetParent()
 				if not popup:IsShown() then return end
 				
+				-- 7.2: GB_ICON_FILENAMES was made accessible (thanks!), but only as a table instead of function
+				if popup == GuildBankPopupFrame then
+					GB_ICON_FILENAMES = searchIcons
+				end
+				
 				if #searchIcons == 0 then
 					popup.SearchBox:SetTextColor(1, 0, 0)
 				else
@@ -174,10 +179,14 @@ local function InitSearch()
 	end
 end
 
-local function ClearSearch()
+local function ClearSearch(popup)
 	activeSearch = nil
 	wipe(searchIcons)
 	searchObject:Stop()
+	
+	if popup == GuildBankPopupFrame then
+		GB_ICON_FILENAMES = GB_ICON_FILENAMES_ORIGINAL
+	end
 end
 
 function f:OnEvent(event, addon)
@@ -249,126 +258,120 @@ function f:Initialize(sf)
 		popup:SetScript("OnDragStop", popup.StopMovingOrSizing)
 		
 		-- Update GameTooltip when scrollling
-		sf:HookScript("OnMouseWheel", RefreshTooltip)
+		sf:HookScript("OnMouseWheel", RefreshMouseFocus)
 		
 		if popup == GuildBankPopupFrame then
-			-- Can not make the Guild Bank support icon search; at least support GameTooltip info
-			-- Since the guild bank gets the icon info locally in the update func
-			GB_ICON_FILENAMES = {}
-			GB_ICON_FILENAMES[1] = "INV_MISC_QUESTIONMARK"
+			GB_ICON_FILENAMES_ORIGINAL = CopyTable(GB_ICON_FILENAMES)
+		end
+		
+		local eb = CreateFrame("EditBox", "$parentSearchBox", popup, "InputBoxTemplate")
+		eb:SetPoint("BOTTOMLEFT", 70, 15)
+		eb:SetPoint("RIGHT", frames[sf].okaybutton, "LEFT", 0, 0)
+		eb:SetHeight(15)
+		eb:SetFrameLevel(70) -- FrameStrata or level changed in 7.1
+		popup.SearchBox = eb
+		
+		-- No idea why fontstrings are drawn below the popup frame in 7.1
+		-- Using the OVERLAY layer didnt help; workaround by parenting to editbox instead
+		local searchLabel = eb:CreateFontString()
+		searchLabel:SetFontObject("GameFontNormal")
+		searchLabel:SetPoint("RIGHT", eb, "LEFT", -5, 0)
+		searchLabel:SetText(SEARCH..":")
+		
+		local linkLabel = eb:CreateFontString()
+		linkLabel:SetFontObject("GameFontNormal")
+		linkLabel:SetPoint("RIGHT", frames[sf].okaybutton, "LEFT", -5, -1)
+		linkLabel:SetTextColor(.62, .62, .62)
+		
+		eb:SetScript("OnTextChanged", function(self, userInput)
+			local text = self:GetText()
 			
-			GetMacroItemIcons(GB_ICON_FILENAMES)
-			GetMacroIcons(GB_ICON_FILENAMES)
-		else
-			local eb = CreateFrame("EditBox", "$parentSearchBox", popup, "InputBoxTemplate")
-			eb:SetPoint("BOTTOMLEFT", 70, 15)
-			eb:SetPoint("RIGHT", frames[sf].okaybutton, "LEFT", 0, 0)
-			eb:SetHeight(15)
-			eb:SetFrameLevel(250) -- FrameStrata or level changed in 7.1
-			popup.SearchBox = eb
-			
-			-- No idea why fontstrings are drawn below the popup frame in 7.1
-			-- Using the OVERLAY layer didnt help; workaround by parenting to editbox instead
-			local searchLabel = eb:CreateFontString()
-			searchLabel:SetFontObject("GameFontNormal")
-			searchLabel:SetPoint("RIGHT", eb, "LEFT", -5, 0)
-			searchLabel:SetText(SEARCH..":")
-			
-			local linkLabel = eb:CreateFontString()
-			linkLabel:SetFontObject("GameFontNormal")
-			linkLabel:SetPoint("RIGHT", frames[sf].okaybutton, "LEFT", -5, -1)
-			linkLabel:SetTextColor(.62, .62, .62)
-			
-			eb:SetScript("OnTextChanged", function(self, userInput)
-				local text = self:GetText()
+			if strfind(text, "[:=]") then -- Search by spell/item/achievement id
+				local link, id = text:lower():match("(%a+)[:=](%d+)")
+				local linkSearch
+				ClearSearch(popup)
 				
-				if strfind(text, "[:=]") then -- Search by spell/item/achievement id
-					local link, id = text:lower():match("(%a+)[:=](%d+)")
-					local linkSearch
-					ClearSearch()
-					
-					if link == "spell" and id then
-						linkSearch = S.FileData[select(3, GetSpellInfo(id))]
-					elseif link == "item" and id then
-						linkSearch = S.FileData[select(5, GetItemInfoInstant(id))]
-					elseif link == "achievement" and id then
-						-- Returns the texture path instead of FileDataID
-						local path = select(10, GetAchievementInfo(id))
-						linkSearch = path and path:lower():match("interface\\icons\\(.+)")
-					elseif link == "filedata" and id then
-						linkSearch = S.FileData[tonumber(id)]
-					end
-					
-					if linkSearch then
-						searchIcons[1] = linkSearch
-						eb:SetTextColor(1, 1, 1)
-						linkLabel:SetText(linkSearch)
-					else
-						searchIcons[1] = "INV_MISC_QUESTIONMARK"
-						eb:SetTextColor(1, 0, 0)
-						linkLabel:SetText()
-					end
-					UpdateSearchPopup(sf)
-				else
-					eb:SetTextColor(1, 1, 1)
-					linkLabel:SetText()
-					
-					if #text > 0 then -- Search by texture name
-						searchObject:SetSearchParameter(text)
-						activeSearch = sf
-					else
-						ClearSearch()
-						UpdateSearchPopup(sf)
-					end
+				if link == "spell" and id then
+					linkSearch = S.FileData[select(3, GetSpellInfo(id))]
+				elseif link == "item" and id then
+					linkSearch = S.FileData[select(5, GetItemInfoInstant(id))]
+				elseif link == "achievement" and id then
+					-- Returns the texture path instead of FileDataID
+					local path = select(10, GetAchievementInfo(id))
+					linkSearch = path and path:lower():match("interface\\icons\\(.+)")
+				elseif link == "filedata" and id then
+					linkSearch = S.FileData[tonumber(id)]
 				end
-			end)
-			
-			-- Something changed in 7.1; :ClearFocus() on SearchBox does not work anymore(?)
-			eb:SetScript("OnEnterPressed", function()
-				frames[sf].editbox:SetFocus()
-			end)
-			
-			eb:SetScript("OnEscapePressed", function()
-				frames[sf].editbox:SetFocus()
-			end)
-			
-			popup:HookScript("OnHide", function()
-				ClearSearch()
-				eb:SetText("")
+				
+				if linkSearch then
+					searchIcons[1] = linkSearch
+					eb:SetTextColor(1, 1, 1)
+					linkLabel:SetText(linkSearch)
+				else
+					searchIcons[1] = "INV_MISC_QUESTIONMARK"
+					eb:SetTextColor(1, 0, 0)
+					linkLabel:SetText()
+				end
+				UpdateSearchPopup(sf)
+			else
 				eb:SetTextColor(1, 1, 1)
 				linkLabel:SetText()
-			end)
-			
-			-- Update scrollbar for the filtered icons
-			hooksecurefunc(frames[sf].update, function()
-				if #searchIcons > 0 then
-					FauxScrollFrame_Update(sf, ceil(#searchIcons / ICONS_PER_ROW), ICON_ROWS, frames[sf].icon_row_height)
-				end
-			end)
-			
-			local isGearManager = (popup == GearManagerDialogPopup)
-			
-			-- Prehook GetIconInfo for search functionality 
-			local oldGetIconInfo = _G[frames[sf].geticoninfo]
-			_G[frames[sf].geticoninfo] = function(index)
-				if #searchIcons > 0 then
-					-- GearManager does not cope well with nil values
-					return searchIcons[index] or isGearManager and "INV_MISC_QUESTIONMARK"
+				
+				if #text > 0 then -- Search by texture name
+					searchObject:SetSearchParameter(text)
+					activeSearch = sf
 				else
-					return oldGetIconInfo(index)
+					ClearSearch(popup)
+					UpdateSearchPopup(sf)
 				end
 			end
-			
-			-- Support shift-clicking links to the search box
-			-- maybe also hide StackSplitFrame but will have to hook ContainerFrameItemButton_OnModifiedClick
-			hooksecurefunc("ChatEdit_InsertLink", function(text)
-				if text then
-					if eb:IsVisible() then
-						eb:SetText(strmatch(text, "H(%l+:%d+)") or "")
-					end
-				end
-			end)
+		end)
+		
+		-- Something changed in 7.1; :ClearFocus() on SearchBox does not work anymore(?)
+		eb:SetScript("OnEnterPressed", function()
+			frames[sf].editbox:SetFocus()
+		end)
+		
+		eb:SetScript("OnEscapePressed", function()
+			frames[sf].editbox:SetFocus()
+		end)
+		
+		popup:HookScript("OnHide", function()
+			ClearSearch(popup)
+			eb:SetText("")
+			eb:SetTextColor(1, 1, 1)
+			linkLabel:SetText()
+		end)
+		
+		-- Update scrollbar for the filtered icons
+		hooksecurefunc(frames[sf].update, function()
+			if #searchIcons > 0 then
+				FauxScrollFrame_Update(sf, ceil(#searchIcons / ICONS_PER_ROW), ICON_ROWS, frames[sf].icon_row_height)
+			end
+		end)
+		
+		local isGearManager = (popup == GearManagerDialogPopup)
+		
+		-- Prehook GetIconInfo for search functionality 
+		local oldGetIconInfo = _G[frames[sf].geticoninfo]
+		_G[frames[sf].geticoninfo] = function(index)
+			if #searchIcons > 0 then
+				-- GearManager does not cope well with nil values
+				return searchIcons[index] or isGearManager and "INV_MISC_QUESTIONMARK"
+			else
+				return oldGetIconInfo(index)
+			end
 		end
+		
+		-- Support shift-clicking links to the search box
+		-- maybe also hide StackSplitFrame but will have to hook ContainerFrameItemButton_OnModifiedClick
+		hooksecurefunc("ChatEdit_InsertLink", function(text)
+			if text then
+				if eb:IsVisible() then
+					eb:SetText(strmatch(text, "H(%l+:%d+)") or "")
+				end
+			end
+		end)
 		
 		self:UpdateButtons(sf)
 		self:UpdateTextures(sf)
