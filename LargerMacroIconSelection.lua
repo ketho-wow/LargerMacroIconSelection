@@ -296,7 +296,7 @@ function f:Initialize(sf)
 				elseif link == "item" and id then
 					linkSearch = S.FileData[select(5, GetItemInfoInstant(id))]
 				elseif link == "achievement" and id then
-					linkSearch = select(10, GetAchievementInfo(id))
+					linkSearch = S.FileData[select(10, GetAchievementInfo(id))]
 				elseif link == "filedata" and id then
 					linkSearch = S.FileData[tonumber(id)]
 				end
