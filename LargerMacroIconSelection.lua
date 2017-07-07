@@ -296,9 +296,7 @@ function f:Initialize(sf)
 				elseif link == "item" and id then
 					linkSearch = S.FileData[select(5, GetItemInfoInstant(id))]
 				elseif link == "achievement" and id then
-					-- Returns the texture path instead of FileDataID
-					local path = select(10, GetAchievementInfo(id))
-					linkSearch = path and path:lower():match("interface\\icons\\(.+)")
+					linkSearch = select(10, GetAchievementInfo(id))
 				elseif link == "filedata" and id then
 					linkSearch = S.FileData[tonumber(id)]
 				end
@@ -313,6 +311,7 @@ function f:Initialize(sf)
 					linkLabel:SetText()
 				end
 				UpdateSearchPopup(sf)
+				_G[frames[sf].button.."1"]:Click()
 			else
 				eb:SetTextColor(1, 1, 1)
 				linkLabel:SetText()
@@ -366,10 +365,8 @@ function f:Initialize(sf)
 		-- Support shift-clicking links to the search box
 		-- maybe also hide StackSplitFrame but will have to hook ContainerFrameItemButton_OnModifiedClick
 		hooksecurefunc("ChatEdit_InsertLink", function(text)
-			if text then
-				if eb:IsVisible() then
-					eb:SetText(strmatch(text, "H(%l+:%d+)") or "")
-				end
+			if text and eb:IsVisible() then
+				eb:SetText(strmatch(text, "H(%l+:%d+)") or "")
 			end
 		end)
 		

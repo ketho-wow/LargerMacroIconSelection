@@ -1,6 +1,6 @@
 ## Interface: 70200
 ## Title: LargerMacroIconSelectionData
-## Version: 7.2.0.23835
+## Version: 7.2.5.24330
 ## Author: Xinhuan, Ketho
 ## Notes: Load on Demand Icon FileData
 ## LoadOnDemand: 1
