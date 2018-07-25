@@ -66,7 +66,7 @@ local frames = {
 			button = "MacroPopupButton",
 			template = "MacroPopupButtonTemplate",
 			update = "MacroPopupFrame_Update",
-			okaybutton = MacroPopupOkayButton,
+			okaybutton = MacroPopupFrame.BorderBox.OkayButton,
 			editbox = MacroPopupEditBox,
 		}
 	end,
