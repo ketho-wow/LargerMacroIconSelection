@@ -26,7 +26,6 @@ local _G = _G
 local db
 
 local ICONS_PER_ROW, ICON_ROWS, ICONS_SHOWN
-local previousbuttons = 0
 
 local popup_regions, sf_regions = {}, {}
 local origSize, origNum = {}, {}
@@ -265,7 +264,7 @@ function f:Initialize(sf)
 		end
 		
 		local eb = CreateFrame("EditBox", "$parentSearchBox", popup, "InputBoxTemplate")
-		eb:SetPoint("BOTTOMLEFT", 70, 15)
+		eb:SetPoint("BOTTOMLEFT", 72, 15)
 		eb:SetPoint("RIGHT", frames[sf].okaybutton, "LEFT", 0, 0)
 		eb:SetHeight(15)
 		eb:SetFrameLevel(70) -- FrameStrata or level changed in 7.1
@@ -275,7 +274,7 @@ function f:Initialize(sf)
 		-- Using the OVERLAY layer didnt help; workaround by parenting to editbox instead
 		local searchLabel = eb:CreateFontString()
 		searchLabel:SetFontObject("GameFontNormal")
-		searchLabel:SetPoint("RIGHT", eb, "LEFT", -5, 0)
+		searchLabel:SetPoint("RIGHT", eb, "LEFT", -6, 0)
 		searchLabel:SetText(SEARCH..":")
 		
 		local linkLabel = eb:CreateFontString()
@@ -342,14 +341,19 @@ function f:Initialize(sf)
 			linkLabel:SetText()
 		end)
 		
+		local isGearManager = (popup == GearManagerDialogPopup)
+		
 		-- Update scrollbar for the filtered icons
 		hooksecurefunc(frames[sf].update, function()
 			if #searchIcons > 0 then
 				FauxScrollFrame_Update(sf, ceil(#searchIcons / ICONS_PER_ROW), ICON_ROWS, frames[sf].icon_row_height)
+				
+				-- Gear manager update function will show the buttons again, hide them again
+				if isGearManager then
+					self:UpdateButtons(sf, #searchIcons)
+				end
 			end
 		end)
-		
-		local isGearManager = (popup == GearManagerDialogPopup)
 		
 		-- Prehook GetIconInfo for search functionality 
 		local oldGetIconInfo = _G[frames[sf].geticoninfo]
@@ -383,15 +387,15 @@ function f:UpdateButtons(sf, amount)
 	local popup = sf:GetParent()
 	local button = frames[sf].button
 	local template = frames[sf].template
-	-- The GearManager does not like nil values
-	-- so we have to manually hide the buttons for them, at least when we show just a few icons
-	local numIcons = amount and min(amount, ICONS_SHOWN) or ICONS_SHOWN
 	
 	-- Set the frame specific globals to the new values
 	_G[frames[sf].icons_per_row] = ICONS_PER_ROW
 	_G[frames[sf].icon_rows] = ICON_ROWS
 	_G[frames[sf].icons_shown] = ICONS_SHOWN
 	
+	-- The GearManager does not like nil values
+	-- so we have to manually hide the buttons for them, at least when we show just a few icons\
+	local numIcons = amount and min(amount, ICONS_SHOWN) or ICONS_SHOWN
 	local isGearManager = (popup == GearManagerDialogPopup)
 	
 	for i = 1, numIcons do
@@ -434,11 +438,10 @@ function f:UpdateButtons(sf, amount)
 	end
 	
 	-- Hide any superfluous buttons
-	for i = numIcons + 1, (amount and ICONS_SHOWN or previousbuttons) do
-		local b = _G[button..i]
-		if b then
-			b:Hide()
-		end
+	local i = numIcons + 1
+	while _G[button..i] do
+		_G[button..i]:Hide()
+		i = i + 1
 	end
 end
 
@@ -466,8 +469,8 @@ end
 
 SlashCmdList.LARGERMACROICONSELECTION = function(msg)
 	local width, height = strmatch(msg, "(%d+)[^%d]+(%d+)")
-	width = floor(tonumber(width) or 0)
-	height = floor(tonumber(height) or 0)
+	width = tonumber(width) or 10
+	height = tonumber(height) or 10
 	
 	if width >= 5 and height >= 4 then
 		-- Avoid outgrowing the screen (1920x1080, normal UI Scale)
@@ -478,7 +481,6 @@ SlashCmdList.LARGERMACROICONSELECTION = function(msg)
 		db.width = width
 		db.height = height
 		
-		previousbuttons = ICONS_SHOWN or 0
 		ICONS_PER_ROW = width
 		ICON_ROWS = height
 		ICONS_SHOWN = ICONS_PER_ROW * ICON_ROWS
