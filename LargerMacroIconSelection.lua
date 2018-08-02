@@ -203,6 +203,11 @@ function f:OnEvent(event, addon)
 		if IsAddOnLoaded("Blizzard_MacroUI") then
 			self:Initialize(MacroPopupScrollFrame)
 		end
+		if IsAddOnLoaded("Blizzard_GuildBankUI") then
+			if IsGuildLeader() then
+				self:Initialize(GuildBankPopupScrollFrame)
+			end
+		end
 		
 	elseif addon == "Blizzard_MacroUI" then
 		self:Initialize(MacroPopupScrollFrame)
