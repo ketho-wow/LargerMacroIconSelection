@@ -204,18 +204,16 @@ function f:OnEvent(event, addon)
 			self:Initialize(MacroPopupScrollFrame)
 		end
 		if IsAddOnLoaded("Blizzard_GuildBankUI") then
-			if IsGuildLeader() then
-				self:Initialize(GuildBankPopupScrollFrame)
-			end
-		end
-		
-	elseif addon == "Blizzard_MacroUI" then
-		self:Initialize(MacroPopupScrollFrame)
-		
-	elseif addon == "Blizzard_GuildBankUI" then
-		if IsGuildLeader() then
 			self:Initialize(GuildBankPopupScrollFrame)
 		end
+	
+	elseif addon == "Blizzard_MacroUI" then
+		self:Initialize(MacroPopupScrollFrame)
+	
+	-- guild leader and permitted ranks can change the guild bank tab icon
+	-- too lazy to check for SetCurrentGuildBankTab / CanEditGuildBankTabInfo, so just initialize anyway
+	elseif addon == "Blizzard_GuildBankUI" then
+		self:Initialize(GuildBankPopupScrollFrame)
 	end
 end
 
