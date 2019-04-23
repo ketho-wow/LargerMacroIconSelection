@@ -1,6 +1,6 @@
-## Interface: 80000
+## Interface: 80100
 ## Title: LargerMacroIconSelectionData
-## Version: 8.0.1.27165
+## Version: 8.2.0 (30093)
 ## Author: Xinhuan, Ketho
 ## Notes: Load on Demand Icon FileData
 ## LoadOnDemand: 1
