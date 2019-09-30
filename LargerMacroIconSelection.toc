@@ -1,10 +1,17 @@
+#@retail@
 ## Interface: 80205
-## Title: LargerMacroIconSelection
+#@end-retail@
+#@non-retail@
+# ## Interface: 11302
+#@end-non-retail@
 ## Version: @project-version@
+## Title: LargerMacroIconSelection
 ## Author: Xinhuan, Ketho
 ## Notes: Shows you a much bigger icon selection frame
 ## SavedVariables: LargerMacroIconSelectionDB
 ## X-Embeds: LibAdvancedIconSelector-1.0
+## X-Curse-Project-ID: 14254
+## X-WoWI-ID: 11189
 
 #@no-lib-strip@
 Libs\LibStub\LibStub.lua

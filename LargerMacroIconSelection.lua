@@ -1,21 +1,3 @@
---[[
-LargerMacroIconSelection
-Copyright (C) 2016 Xinhuan, Ketho
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
-]]
-
 LargerMacroIconSelection = CreateFrame("Frame")
 local f = LargerMacroIconSelection
 local LibAIS = LibStub("LibAdvancedIconSelector-1.0-LMIS")
@@ -25,9 +7,9 @@ local L = S.L
 local _G = _G
 local db
 
+local isClassic = (WOW_PROJECT_ID == WOW_PROJECT_CLASSIC)
 local ICONS_PER_ROW, ICON_ROWS, ICONS_SHOWN
 
-local popup_regions, sf_regions = {}, {}
 local origSize, origNum = {}, {}
 local activeFrame = {}
 
@@ -110,7 +92,8 @@ local function LoadFileData(addon)
 				error(addon.." is "..reason)
 			end
 		end
-		S.FileData = _G[addon]:GetFileData()
+		local fd = _G[addon]
+		S.FileData = isClassic and fd:GetFileDataClassic() or fd:GetFileDataRetail()
 	end
 end
 
@@ -196,9 +179,10 @@ function f:OnEvent(event, addon)
 		ICONS_PER_ROW = db.width
 		ICON_ROWS = db.height
 		ICONS_SHOWN = ICONS_PER_ROW * ICON_ROWS
-		
-		self:Initialize(GearManagerDialogPopupScrollFrame)
-		
+
+		if not isClassic then
+			self:Initialize(GearManagerDialogPopupScrollFrame)
+		end
 		-- Someone else made it load before us
 		if IsAddOnLoaded("Blizzard_MacroUI") then
 			self:Initialize(MacroPopupScrollFrame)
@@ -231,10 +215,6 @@ function f:Initialize(sf)
 		LoadFileData("LargerMacroIconSelectionData")
 		InitSearch()
 		frames[sf] = frames[sf:GetName()]()
-		
-		-- Group the anonymous textures into a table before adding more regions
-		popup_regions[sf] = {popup:GetRegions()}
-		sf_regions[sf] = {sf:GetRegions()}
 		
 		origSize[sf] = {
 			width = popup:GetWidth(),
@@ -358,7 +338,7 @@ function f:Initialize(sf)
 			end
 		end)
 		
-		-- Prehook GetIconInfo for search functionality 
+		-- Prehook GetIconInfo for search functionality
 		local oldGetIconInfo = _G[frames[sf].geticoninfo]
 		_G[frames[sf].geticoninfo] = function(index)
 			if #searchIcons > 0 then
@@ -450,7 +430,7 @@ end
 
 -- In 7.1 Blizzard shows 90 icons, with 9th row half visible
 -- and an extra empty row as the very last row to make up for it
-function f:UpdateTextures(sf)	
+function f:UpdateTextures(sf)
 	local popup = sf:GetParent()
 	local button = frames[sf].button
 	
