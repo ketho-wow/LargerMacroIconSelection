@@ -10,4 +10,5 @@
 ## Notes: Load on Demand Icon FileData
 ## LoadOnDemand: 1
 
-FileData.lua
+FileDataRetail.lua
+FileDataClassic.lua
