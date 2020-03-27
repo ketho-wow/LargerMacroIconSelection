@@ -1,4 +1,3 @@
-
 -- all textures under Interface/Icons/
 -- from https://wow.tools/casc/listfile/download/csv/unverified
 -- https://github.com/Ketho/WoWtoolsParser/blob/master/examples/InterfaceIcons.lua

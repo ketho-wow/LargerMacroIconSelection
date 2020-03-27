@@ -1,5 +1,5 @@
 -- all textures under Interface/Icons/
--- from https://wow.tools/casc/listfile/download/csv/unverified
+-- from https://wow.tools/casc/listfile/download/csv/build?buildConfig=4756dfc0367df50312b250070498e024
 local FileData = {
 [132089]="ability_ambush",
 [132090]="ability_backstab",
