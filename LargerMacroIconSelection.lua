@@ -94,8 +94,7 @@ local function LoadFileData(addon)
 			end
 		end
 		local fd = _G[addon]
-		-- let BCC use retail filedata
-		S.FileData = isClassic and fd:GetFileDataClassic() or fd:GetFileDataRetail()
+		S.FileData = isRetail and fd:GetFileDataRetail() or fd:GetFileDataClassic()
 	end
 end
 
