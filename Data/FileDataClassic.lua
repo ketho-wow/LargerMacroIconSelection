@@ -1,5 +1,6 @@
 -- all textures under Interface/Icons/
--- from https://wow.tools/casc/listfile/download/csv/build?buildConfig=4756dfc0367df50312b250070498e024
+-- BCC listfile manually downloaded, it doesn't seem to have BCC icons though
+-- https://github.com/Ketho/WoWtoolsParser/blob/master/examples/InterfaceIcons.lua
 local FileData = {
 [132089]="ability_ambush",
 [132090]="ability_backstab",

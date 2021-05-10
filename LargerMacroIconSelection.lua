@@ -8,6 +8,7 @@ local _G = _G
 local db
 
 local isClassic = (WOW_PROJECT_ID == WOW_PROJECT_CLASSIC)
+local isRetail = (WOW_PROJECT_ID == WOW_PROJECT_MAINLINE)
 local ICONS_PER_ROW, ICON_ROWS, ICONS_SHOWN
 
 local origSize, origNum = {}, {}
@@ -93,6 +94,7 @@ local function LoadFileData(addon)
 			end
 		end
 		local fd = _G[addon]
+		-- let BCC use retail filedata
 		S.FileData = isClassic and fd:GetFileDataClassic() or fd:GetFileDataRetail()
 	end
 end
@@ -180,7 +182,7 @@ function f:OnEvent(event, addon)
 		ICON_ROWS = db.height
 		ICONS_SHOWN = ICONS_PER_ROW * ICON_ROWS
 
-		if not isClassic then
+		if isRetail then
 			self:Initialize(GearManagerDialogPopupScrollFrame)
 		end
 		-- Someone else made it load before us

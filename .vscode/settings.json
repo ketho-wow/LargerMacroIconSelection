@@ -1,0 +1,32 @@
+{
+	"Lua.diagnostics.globals": [
+		"FauxScrollFrame_GetOffset",
+		"FauxScrollFrame_Update",
+		"GameTooltip",
+		"GearManagerDialogPopup",
+		"GearManagerDialogPopupEditBox",
+		"GearManagerDialogPopupOkay",
+		"GearManagerDialogPopupScrollFrame",
+		"GEARSET_ICON_ROW_HEIGHT",
+		"GUILDBANK_ICON_ROW_HEIGHT",
+		"GuildBankPopupEditBox",
+		"GuildBankPopupFrame",
+		"GuildBankPopupOkayButton",
+		"GuildBankPopupScrollFrame",
+		"LargerMacroIconSelectionData",
+		"LibStub",
+		"MACRO_ICON_ROW_HEIGHT",
+		"MacroFrameSelectedMacroButtonIcon",
+		"MacroPopupEditBox",
+		"MacroPopupFrame",
+		"MacroPopupScrollFrame",
+		"SEARCH",
+		"SlashCmdList",
+		"WOW_PROJECT_CLASSIC",
+		"WOW_PROJECT_ID",
+		"WOW_PROJECT_MAINLINE"
+	],
+	"Lua.diagnostics.disable": [
+		"undefined-field"
+	]
+}
