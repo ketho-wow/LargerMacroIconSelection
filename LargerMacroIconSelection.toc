@@ -1,6 +1,6 @@
-## Interface-Retail: 90005
+## Interface-Retail: 90100
 ## Interface-Classic: 11307
-## Interface-BC: 20501
+## Interface-BCC: 20502
 ## Version: @project-version@
 ## Title: LargerMacroIconSelection
 ## Author: Xinhuan, Ketho

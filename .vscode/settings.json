@@ -1,5 +1,6 @@
 {
 	"Lua.diagnostics.globals": [
+		"CreateFrame",
 		"FauxScrollFrame_GetOffset",
 		"FauxScrollFrame_Update",
 		"GameTooltip",
@@ -9,6 +10,7 @@
 		"GearManagerDialogPopupScrollFrame",
 		"GEARSET_ICON_ROW_HEIGHT",
 		"GUILDBANK_ICON_ROW_HEIGHT",
+		"GuildBankFrame",
 		"GuildBankPopupEditBox",
 		"GuildBankPopupFrame",
 		"GuildBankPopupOkayButton",
@@ -22,7 +24,6 @@
 		"MacroPopupScrollFrame",
 		"SEARCH",
 		"SlashCmdList",
-		"WOW_PROJECT_CLASSIC",
 		"WOW_PROJECT_ID",
 		"WOW_PROJECT_MAINLINE"
 	],

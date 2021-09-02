@@ -7,7 +7,6 @@ local L = S.L
 local _G = _G
 local db
 
-local isClassic = (WOW_PROJECT_ID == WOW_PROJECT_CLASSIC)
 local isRetail = (WOW_PROJECT_ID == WOW_PROJECT_MAINLINE)
 local ICONS_PER_ROW, ICON_ROWS, ICONS_SHOWN
 
@@ -188,7 +187,7 @@ function f:OnEvent(event, addon)
 		if IsAddOnLoaded("Blizzard_MacroUI") then
 			self:Initialize(MacroPopupScrollFrame)
 		end
-		if IsAddOnLoaded("Blizzard_GuildBankUI") then
+		if IsAddOnLoaded("Blizzard_GuildBankUI") and isRetail then
 			self:Initialize(GuildBankPopupScrollFrame)
 		end
 
@@ -197,7 +196,8 @@ function f:OnEvent(event, addon)
 
 	-- guild leader and permitted ranks can change the guild bank tab icon
 	-- too lazy to check for SetCurrentGuildBankTab / CanEditGuildBankTabInfo, so just initialize anyway
-	elseif addon == "Blizzard_GuildBankUI" then
+	-- 2.5.2 guild bank was rewritten, remove support for now
+	elseif addon == "Blizzard_GuildBankUI" and isRetail then
 		self:Initialize(GuildBankPopupScrollFrame)
 	end
 end
