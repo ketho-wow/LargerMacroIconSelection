@@ -1,33 +1,35 @@
 {
 	"Lua.diagnostics.globals": [
-		"CreateFrame",
 		"FauxScrollFrame_GetOffset",
+		"FauxScrollFrame_OnVerticalScroll",
+		"FauxScrollFrame_SetOffset",
 		"FauxScrollFrame_Update",
+		"FONT_COLOR_CODE_CLOSE",
 		"GameTooltip",
 		"GearManagerDialogPopup",
 		"GearManagerDialogPopupEditBox",
 		"GearManagerDialogPopupOkay",
 		"GearManagerDialogPopupScrollFrame",
 		"GEARSET_ICON_ROW_HEIGHT",
-		"GUILDBANK_ICON_ROW_HEIGHT",
-		"GuildBankFrame",
+		"GRAY_FONT_COLOR_CODE",
 		"GuildBankPopupEditBox",
 		"GuildBankPopupFrame",
-		"GuildBankPopupOkayButton",
-		"GuildBankPopupScrollFrame",
 		"LargerMacroIconSelectionData",
-		"LibStub",
+		"LibDebug",
 		"MACRO_ICON_ROW_HEIGHT",
 		"MacroFrameSelectedMacroButtonIcon",
 		"MacroPopupEditBox",
 		"MacroPopupFrame",
 		"MacroPopupScrollFrame",
+		"NORMAL_FONT_COLOR_CODE",
+		"NORMAL_FONT_COLOR",
 		"SEARCH",
-		"SlashCmdList",
-		"WOW_PROJECT_ID",
-		"WOW_PROJECT_MAINLINE"
+		"SlashCmdList"
 	],
 	"Lua.diagnostics.disable": [
+		"deprecated",
+		"redundant-parameter",
+		"unbalanced-assignments",
 		"undefined-field"
 	]
 }

@@ -1191,13 +1191,13 @@ function SearchObject:private_OnSearchTick()
 			break
 		end
 
-		local id, kind, texture, FileDataID = self:GetIconInfo(self.searchIndex)
+		local id, kind, texture, fdid = self:GetIconInfo(self.searchIndex)
 		if self.OnIconScanned then self:OnIconScanned(texture, self.searchIndex, id, kind) end
 
 		if texture then
 			local keywordString = lib:LookupKeywords(texture)
 			if self:private_Matches(texture, keywordString, self.parsedParameter) then
-				if self.OnSearchResultAdded then self:OnSearchResultAdded(texture, self.searchIndex, id, kind, FileDataID) end
+				if self.OnSearchResultAdded then self:OnSearchResultAdded(texture, self.searchIndex, id, kind, fdid) end
 			end
 		end
 	end
