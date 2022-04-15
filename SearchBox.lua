@@ -72,18 +72,19 @@ end
 function LMIS.SearchBox_OnTextChanged(sb, userInput)
 	local info = sb.info
 	local text = sb:GetText()
-	if strfind(text, "[:=]") then -- search by spell/item/achievement id
+	local isNumber = tonumber(text)
+	if isNumber or strfind(text, "[:=]") then -- search by spell/item/achievement id
 		local link, id = text:lower():match("(%a+)[:=](%d+)")
 		local linkSearch
 		LMIS:ClearSearch(info)
-		if link == "spell" and id then
+		if isNumber or link == "filedata" and id then
+			linkSearch = S.FileData[isNumber or tonumber(id)]
+		elseif link == "spell" and id then
 			linkSearch = S.FileData[select(3, GetSpellInfo(id))]
 		elseif link == "item" and id then
 			linkSearch = S.FileData[select(5, GetItemInfoInstant(id))]
 		elseif link == "achievement" and id then
 			linkSearch = S.FileData[select(10, GetAchievementInfo(id))]
-		elseif link == "filedata" and id then
-			linkSearch = S.FileData[tonumber(id)]
 		end
 		if linkSearch then
 			LMIS.activeSearch = info
