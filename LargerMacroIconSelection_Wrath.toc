@@ -1,4 +1,4 @@
-## Interface: 100002
+## Interface: 30400
 ## Version: @project-version@
 ## Title: LargerMacroIconSelection
 ## Author: Xinhuan, Ketho
@@ -21,6 +21,6 @@ Libs\LibAdvancedIconSelector-1.0-LMIS\LibAdvancedIconSelector-1.0-LMIS.lua
 
 Locales.lua
 
-Mainline\IconDataProvider.lua
-Mainline\LargerMacroIconSelection.lua
-Mainline\SearchBox.lua
+Classic\GuildBank.lua
+Classic\LargerMacroIconSelection.lua
+Classic\SearchBox.lua
