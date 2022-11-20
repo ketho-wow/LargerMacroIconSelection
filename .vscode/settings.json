@@ -24,7 +24,10 @@
 		"NORMAL_FONT_COLOR_CODE",
 		"NORMAL_FONT_COLOR",
 		"SEARCH",
-		"SlashCmdList"
+		"SlashCmdList",
+		"GearManagerPopupFrame",
+		"IconDataProviderExtraType",
+		"StackSplitFrame"
 	],
 	"Lua.diagnostics.disable": [
 		"deprecated",
