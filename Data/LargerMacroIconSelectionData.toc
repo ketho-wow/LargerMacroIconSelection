@@ -8,4 +8,4 @@
 ## LoadOnDemand: 1
 
 FileDataRetail.lua
-FileDataClassic.lua
+FileDataWrath.lua

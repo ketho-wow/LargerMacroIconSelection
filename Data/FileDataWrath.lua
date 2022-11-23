@@ -6334,6 +6334,6 @@ local FileData = {
 [4352493]="ability_warlock_randomizesuccubusincubus",
 }
 
-function LargerMacroIconSelectionData:GetFileDataClassic()
+function LargerMacroIconSelectionData:GetFileDataWrath()
 	return FileData
 end
