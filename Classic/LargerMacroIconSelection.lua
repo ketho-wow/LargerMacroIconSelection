@@ -3,7 +3,8 @@ local L = S.L
 LargerMacroIconSelection = CreateFrame("Frame")
 local LMIS = LargerMacroIconSelection
 
-local isRetail = (WOW_PROJECT_ID == WOW_PROJECT_MAINLINE)
+local isWrath = (WOW_PROJECT_ID == WOW_PROJECT_WRATH_CLASSIC)
+local isVanilla = (WOW_PROJECT_ID == WOW_PROJECT_CLASSIC)
 local ICONS_PER_ROW, ICON_ROWS, ICONS_SHOWN
 local origSize, origNum = {}, {}
 
@@ -79,7 +80,11 @@ function LMIS:LoadFileData(addon)
 			end
 		end
 		local fd = _G[addon]
-		S.FileData = isRetail and fd:GetFileDataRetail() or fd:GetFileDataClassic()
+		if isWrath then
+			S.FileData = fd:GetFileDataWrath()
+		elseif isVanilla then
+			S.FileData = fd:GetFileDataVanilla()
+		end
 	end
 end
 
@@ -91,9 +96,6 @@ function LMIS:OnEvent(event, addon)
 		ICONS_PER_ROW = self.db.width
 		ICON_ROWS = self.db.height
 		ICONS_SHOWN = ICONS_PER_ROW * ICON_ROWS
-		if isRetail then
-			self:Initialize(GearManagerDialogPopup)
-		end
 		if IsAddOnLoaded("Blizzard_MacroUI") then -- someone else made it load before us
 			self:Initialize(MacroPopupFrame)
 		end

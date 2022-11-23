@@ -9,3 +9,4 @@
 
 FileDataRetail.lua
 FileDataWrath.lua
+FileDataVanilla.lua
