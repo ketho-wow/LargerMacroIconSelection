@@ -27,7 +27,7 @@ local function IconDataProvider_GetBaseIconTexture(index)
 	local fileDataID = tonumber(texture);
 	if fileDataID ~= nil then
 		return fileDataID;
-	else
+	elseif texture then -- lmis
 		return [[INTERFACE\ICONS\]]..texture;
 	end
 end
@@ -176,6 +176,6 @@ function IconDataProviderLmisMixin:Release()
 	end
 end
 
-function IconDataProviderLmisMixin:SetIconData(icons)
+function IconDataProviderLmisMixin:SetIconData(icons) -- lmis
 	BaseIconFilenames = icons
 end
