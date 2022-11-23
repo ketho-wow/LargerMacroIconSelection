@@ -27,7 +27,11 @@
 		"SlashCmdList",
 		"GearManagerPopupFrame",
 		"IconDataProviderExtraType",
-		"StackSplitFrame"
+		"StackSplitFrame",
+		"MAX_TALENT_TIERS",
+		"NUM_TALENT_COLUMNS",
+		"INVSLOT_FIRST_EQUIPPED",
+		"INVSLOT_LAST_EQUIPPED"
 	],
 	"Lua.diagnostics.disable": [
 		"deprecated",

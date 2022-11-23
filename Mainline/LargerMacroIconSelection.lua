@@ -1,5 +1,4 @@
 local _, S = ...
---local L = S.L
 LargerMacroIconSelection = CreateFrame("Frame")
 local LMIS = LargerMacroIconSelection
 
@@ -36,16 +35,8 @@ function LMIS:OnEvent(event, addon)
 		LargerMacroIconSelectionDB = LargerMacroIconSelectionDB or CopyTable(defaults)
 		self.db = LargerMacroIconSelectionDB
 		self:Initialize(GearManagerPopupFrame)
-		if IsAddOnLoaded("Blizzard_MacroUI") then -- someone else made it load before us
-			self:Initialize(MacroPopupFrame)
-		end
-		if IsAddOnLoaded("Blizzard_GuildBankUI") then
-			self:Initialize(GuildBankPopupFrame)
-		end
-	elseif addon == "Blizzard_MacroUI" then
-		self:Initialize(MacroPopupFrame)
-	elseif addon == "Blizzard_GuildBankUI" then
-		self:Initialize(GuildBankPopupFrame)
+		EventUtil.ContinueOnAddOnLoaded("Blizzard_MacroUI", function() self:Initialize(MacroPopupFrame) end)
+		EventUtil.ContinueOnAddOnLoaded("Blizzard_GuildBankUI", function() self:Initialize(GuildBankPopupFrame) end)
 	end
 end
 
@@ -76,27 +67,48 @@ function LMIS:Initialize(popup)
 		-- searchbox
 		self:CreateSearchBox(popup)
 		-- icon tooltip
-		for _, b in pairs(popup.IconSelector.ScrollBox:GetFrames()) do
-			b:HookScript("OnEnter", function()
-				GameTooltip:SetOwner(b, "ANCHOR_TOPLEFT")
-				local idx = b:GetSelectionIndex()
-				local fileid = b:GetSelection()
-				local isValid = (type(fileid) == "number")
-				GameTooltip:AddLine(isValid and format("%s |cff71D5FF%s|r", idx, fileid) or idx)
-				if idx == 1 then
-					GameTooltip:AddLine("inv_misc_questionmark", 1, 1, 1)
-				else
-					GameTooltip:AddLine(isValid and S.FileData[fileid] or fileid, 1, 1, 1)
-				end
-				GameTooltip:Show()
-			end)
-			b:HookScript("OnLeave", function()
-				GameTooltip:Hide()
-			end)
+		for _, btn in pairs(popup.IconSelector.ScrollBox:GetFrames()) do
+			btn:HookScript("OnEnter", LMIS.ShowTooltip)
+			btn:HookScript("OnLeave", LMIS.GameTooltip_Hide)
 		end
+		popup.BorderBox.SelectedIconArea.SelectedIconButton:HookScript("OnEnter", function(btn)
+			local fileid = btn:GetIconTexture()
+			self:SetIconTooltip(btn, function()
+				if fileid ~= 134400 then -- inv_misc_questionmark
+					GameTooltip:AddLine(format("|cff71D5FF%s|r", fileid))
+					if S.FileData[fileid] then
+						GameTooltip:AddLine(S.FileData[fileid], 1, 1, 1)
+					end
+				end
+			end)
+		end)
 		-- need all buttons created and hooked before changing the data provider
 		self:UpdateIconSelector(popup)
 	end)
+end
+
+function LMIS.ShowTooltip(btn)
+	local idx = btn:GetSelectionIndex()
+	local fileid = btn:GetSelection()
+	local isValid = (type(fileid) == "number")
+	LMIS:SetIconTooltip(btn, function()
+		GameTooltip:AddLine(isValid and format("%s |cff71D5FF%s|r", idx, fileid) or idx)
+		if idx == 1 then
+			GameTooltip:AddLine("inv_misc_questionmark", 1, 1, 1)
+		else
+			GameTooltip:AddLine(isValid and S.FileData[fileid] or fileid, 1, 1, 1)
+		end
+	end)
+end
+
+function LMIS.GameTooltip_Hide()
+	GameTooltip:Hide()
+end
+
+function LMIS:SetIconTooltip(parent, func)
+	GameTooltip:SetOwner(parent, "ANCHOR_TOPLEFT")
+	func()
+	GameTooltip:Show()
 end
 
 local ProviderTypes = {
@@ -110,5 +122,18 @@ function LMIS:UpdateIconSelector(popup)
 		popup.iconDataProvider:Release()
 	end
 	popup.iconDataProvider = CreateAndInitFromMixin(IconDataProviderLmisMixin, ProviderTypes[popup:GetName()])
-	popup:Update()
+	self:UpdatePopup(popup)
+end
+
+-- updating clears the editbox and selected icon
+function LMIS:UpdatePopup(popup)
+	local text = popup.BorderBox.IconSelectorEditBox:GetText()
+	local selectedIcon = popup.BorderBox.SelectedIconArea.SelectedIconButton:GetIconTexture()
+	popup.Update(popup)
+	popup.BorderBox.IconSelectorEditBox:SetText(text)
+	-- update selected icon and related functionality
+	popup.BorderBox.SelectedIconArea.SelectedIconButton:SetIconTexture(selectedIcon)
+	local index = popup.iconDataProvider:GetIndexOfIcon(selectedIcon)
+	popup.IconSelector:SetSelectedIndex(index)
+	popup:SetSelectedIconText()
 end

@@ -26,8 +26,8 @@ function LMIS:CreateSearchBox(popup)
 		sb:ClearFocus()
 	end)
 	sb.spinner = CreateFrame("Frame", nil, sb, "LoadingSpinnerTemplate")
-	sb.spinner:SetPoint("RIGHT", -4, -1)
-	sb.spinner:SetSize(20, 20)
+	sb.spinner:SetPoint("RIGHT")
+	sb.spinner:SetSize(24, 24)
 	sb.spinner:Hide()
 	popup:HookScript("OnHide", function()
 		self:ClearSearch(popup)
@@ -65,7 +65,7 @@ function LMIS:InitSearch()
 				else
 					popup.SearchBox:SetTextColor(1, 1, 1)
 					self:SetSearchData(popup)
-					self:UpdateSearchPopup(popup)
+					self:UpdatePopup(popup)
 				end
 				self.activeSearch = nil
 				popup.SearchBox.spinner:Hide()
@@ -75,21 +75,15 @@ function LMIS:InitSearch()
 end
 
 function LMIS:ClearSearch(popup)
-	popup.SearchBox.spinner:Hide()
 	self.activeSearch = nil
 	wipe(self.searchIcons)
 	self.searchObject:Stop()
+	popup.SearchBox.spinner:Hide()
 end
 
 function LMIS:SetSearchData(popup)
 	wipe(popup.iconDataProvider.extraIcons)
 	popup.iconDataProvider:SetIconData(LMIS.searchIcons)
-end
-
-function LMIS:UpdateSearchPopup(popup)
-	local text = popup.BorderBox.IconSelectorEditBox:GetText()
-	popup.Update(popup) -- updating clears the EditBox
-	popup.BorderBox.IconSelectorEditBox:SetText(text)
 end
 
 function LMIS.SearchBox_OnTextChanged(sb, userInput)
@@ -98,26 +92,25 @@ function LMIS.SearchBox_OnTextChanged(sb, userInput)
 	local isNumber = tonumber(text)
 	if isNumber or strfind(text, "[:=]") then -- search by spell/item/achievement id
 		local link, id = text:lower():match("(%a+)[:=](%d+)")
-		local linkSearch
+		local fileID
 		LMIS:ClearSearch(popup)
 		if isNumber or link == "filedata" and id then
-			linkSearch = S.FileData[isNumber or tonumber(id)]
+			fileID = isNumber or tonumber(id)
 		elseif link == "spell" and id then
-			linkSearch = S.FileData[select(3, GetSpellInfo(id))]
+			fileID = select(3, GetSpellInfo(id))
 		elseif link == "item" and id then
-			linkSearch = S.FileData[select(5, GetItemInfoInstant(id))]
+			fileID = select(5, GetItemInfoInstant(id))
 		elseif link == "achievement" and id then
-			linkSearch = S.FileData[select(10, GetAchievementInfo(id))]
+			fileID = select(10, GetAchievementInfo(id))
 		end
-		if linkSearch then
+		if S.FileData[fileID] then
 			LMIS.activeSearch = popup
-			LMIS.searchIcons[1] = linkSearch
+			LMIS.searchIcons[1] = fileID
 			sb:SetTextColor(1, 1, 1)
-			sb.linkLabel:SetText(linkSearch)
+			sb.linkLabel:SetText(S.FileData[fileID])
 			LMIS:SetSearchData(popup)
-			LMIS:UpdateSearchPopup(popup)
+			LMIS:UpdatePopup(popup)
 		else
-			LMIS.searchIcons[1] = "INV_MISC_QUESTIONMARK"
 			sb:SetTextColor(1, 0, 0)
 			sb.linkLabel:SetText()
 		end
@@ -129,7 +122,6 @@ function LMIS.SearchBox_OnTextChanged(sb, userInput)
 			LMIS.activeSearch = popup
 		else
 			LMIS:ClearSearch(popup)
-			LMIS:UpdateSearchPopup(popup)
 			LMIS:UpdateIconSelector(popup)
 		end
 	end
