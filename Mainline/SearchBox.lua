@@ -89,9 +89,7 @@ function LMIS:ClearSearch(popup)
 	self.activeSearch = nil
 	wipe(self.searchIcons)
 	self.searchObject:Stop()
-	if popup then
-		popup.SearchBox.spinner:Hide()
-	end
+	popup.SearchBox.spinner:Hide()
 end
 
 function LMIS:SetSearchData(popup)
