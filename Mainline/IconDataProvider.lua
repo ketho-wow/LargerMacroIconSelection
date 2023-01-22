@@ -1,4 +1,5 @@
 
+local isMainline = (WOW_PROJECT_ID == WOW_PROJECT_MAINLINE)
 local QuestionMarkIconFileDataID = 134400;
 
 local NumActiveIconDataProviders = 0;
@@ -108,7 +109,9 @@ function IconDataProviderLmisMixin:Init(type, extraIconsOnly)
 	if type == IconDataProviderExtraType.Spell then
 		local extraIconsMap = {};
 		FillOutExtraIconsMapWithSpells(extraIconsMap);
-		FillOutExtraIconsMapWithTalents(extraIconsMap);
+		if isMainline then
+			FillOutExtraIconsMapWithTalents(extraIconsMap);
+		end
 		self.extraIcons = GetKeysArray(extraIconsMap);
 	elseif type == IconDataProviderExtraType.Equipment then
 		local extraIconsMap = {};

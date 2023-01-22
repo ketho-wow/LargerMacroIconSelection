@@ -1,6 +1,8 @@
 local _, S = ...
 LargerMacroIconSelection = CreateFrame("Frame")
 local LMIS = LargerMacroIconSelection
+LMIS.isMainline = (WOW_PROJECT_ID == WOW_PROJECT_MAINLINE)
+LMIS.isWrath = (WOW_PROJECT_ID == WOW_PROJECT_WRATH_CLASSIC )
 
 -- remove custom/duplicate icons from icon packs
 -- until Blizzard fixes their non-FileDataID icon support
@@ -26,7 +28,11 @@ function LMIS:LoadFileData(addon)
 			end
 		end
 		local fd = _G[addon]
-		S.FileData = fd:GetFileDataRetail()
+		if self.isMainline then
+			S.FileData = fd:GetFileDataRetail()
+		elseif self.isWrath then
+			S.FileData = fd:GetFileDataWrath()
+		end
 	end
 end
 
@@ -34,7 +40,9 @@ function LMIS:OnEvent(event, addon)
 	if addon == "LargerMacroIconSelection" then
 		LargerMacroIconSelectionDB = LargerMacroIconSelectionDB or CopyTable(defaults)
 		self.db = LargerMacroIconSelectionDB
-		self:Initialize(GearManagerPopupFrame)
+		if self.isMainline then
+			self:Initialize(GearManagerPopupFrame)
+		end
 		EventUtil.ContinueOnAddOnLoaded("Blizzard_MacroUI", function() self:Initialize(MacroPopupFrame) end)
 		EventUtil.ContinueOnAddOnLoaded("Blizzard_GuildBankUI", function() self:Initialize(GuildBankPopupFrame) end)
 	end

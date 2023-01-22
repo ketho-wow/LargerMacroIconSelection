@@ -1,10 +1,11 @@
 local _, S = ...
 local L = S.L
-LargerMacroIconSelection = CreateFrame("Frame")
-local LMIS = LargerMacroIconSelection
+LargerMacroIconSelectionClassic = CreateFrame("Frame")
+local LMISC = LargerMacroIconSelectionClassic
 
-local isWrath = (WOW_PROJECT_ID == WOW_PROJECT_WRATH_CLASSIC)
-local isVanilla = (WOW_PROJECT_ID == WOW_PROJECT_CLASSIC)
+LMISC.isMainline = (WOW_PROJECT_ID == WOW_PROJECT_MAINLINE)
+LMISC.isWrath = (WOW_PROJECT_ID == WOW_PROJECT_WRATH_CLASSIC)
+LMISC.isVanilla = (WOW_PROJECT_ID == WOW_PROJECT_CLASSIC)
 local ICONS_PER_ROW, ICON_ROWS, ICONS_SHOWN
 local origSize, origNum = {}, {}
 
@@ -18,8 +19,8 @@ local defaults = {
 	height = 10,
 }
 
-LMIS.frameInfo = {}
-LMIS.frameData = {
+LMISC.frameInfo = {}
+LMISC.frameData = {
 	MacroPopupFrame = function() return {
 			popup = MacroPopupFrame,
 			sf = MacroPopupScrollFrame,
@@ -39,7 +40,7 @@ LMIS.frameData = {
 			popup = GearManagerDialogPopup,
 			sf = GearManagerDialogPopupScrollFrame,
 			editbox = GearManagerDialogPopupEditBox,
-			okaybutton = GearManagerDialogPopupOkay,
+			okaybutton = GearManagerDialogPopup.OkayButton,
 			buttons = "GearManagerDialogPopupButton",
 			geticoninfo = "GetEquipmentSetIconInfo",
 			update = "GearManagerDialogPopup_Update",
@@ -50,25 +51,10 @@ LMIS.frameData = {
 			template = "GearSetPopupButtonTemplate",
 		}
 	end,
-	GuildBankPopupFrame = function() return {
-			popup = GuildBankPopupFrame,
-			sf = GuildBankPopupFrame.ScrollFrame,
-			editbox = GuildBankPopupEditBox,
-			okaybutton = GuildBankPopupFrame.OkayButton,
-			buttons = "GuildBankPopupButton",
-			geticoninfo = "GetGuildBankIconInfo", -- custom
-			update = GuildBankPopupFrame.Update,
-			--icons_per_row = "NUM_GUILDBANK_ICONS_PER_ROW", -- 10
-			--icon_rows = "NUM_GUILDBANK_ICON_ROWS", -- 9
-			--icons_shown = "NUM_GUILDBANK_ICONS_SHOWN", -- 90
-			--icon_row_height = GUILDBANK_ICON_ROW_HEIGHT, -- 36
-			--template = "GuildBankPopupButtonTemplate",
-		}
-	end,
 }
 
 -- save memory by only loading FileData when needed
-function LMIS:LoadFileData(addon)
+function LMISC:LoadFileData(addon)
 	if not S.FileData then
 		local loaded, reason = LoadAddOn(addon)
 		if not loaded then
@@ -80,42 +66,46 @@ function LMIS:LoadFileData(addon)
 			end
 		end
 		local fd = _G[addon]
-		if isWrath then
+		if self.isWrath then
 			S.FileData = fd:GetFileDataWrath()
-		elseif isVanilla then
+		elseif self.isVanilla then
 			S.FileData = fd:GetFileDataVanilla()
 		end
 	end
 end
 
-function LMIS:OnEvent(event, addon)
+function LMISC:OnEvent(event, addon)
 	if addon == "LargerMacroIconSelection" then
 		LargerMacroIconSelectionDB = LargerMacroIconSelectionDB or CopyTable(defaults)
 		self.db = LargerMacroIconSelectionDB
 
-		ICONS_PER_ROW = self.db.width
-		ICON_ROWS = self.db.height
-		ICONS_SHOWN = ICONS_PER_ROW * ICON_ROWS
-		if IsAddOnLoaded("Blizzard_MacroUI") then -- someone else made it load before us
-			self:Initialize(MacroPopupFrame)
+		if self.isWrath then
+			ICONS_PER_ROW = 10
+			ICON_ROWS = 8
+			ICONS_SHOWN = ICONS_PER_ROW * ICON_ROWS
+		else
+			ICONS_PER_ROW = self.db.width
+			ICON_ROWS = self.db.height
+			ICONS_SHOWN = ICONS_PER_ROW * ICON_ROWS
 		end
-		if IsAddOnLoaded("Blizzard_GuildBankUI") then
-			self:Initialize(GuildBankPopupFrame)
+		if self.isVanilla then
+			if IsAddOnLoaded("Blizzard_MacroUI") then -- someone else made it load before us
+				self:Initialize(MacroPopupFrame)
+			end
+		elseif self.isWrath then
+			self:Initialize(GearManagerDialogPopup)
 		end
 	elseif addon == "Blizzard_MacroUI" then
-		self:Initialize(MacroPopupFrame)
-	-- guild leader and permitted ranks can change the guild bank tab icon
-	-- too lazy to check for SetCurrentGuildBankTab / CanEditGuildBankTabInfo, so just initialize anyway
-	-- 2.5.2 guild bank was rewritten, remove support for now
-	elseif addon == "Blizzard_GuildBankUI" then
-		self:Initialize(GuildBankPopupFrame)
+		if self.isVanilla then
+			self:Initialize(MacroPopupFrame)
+		end
 	end
 end
 
-LMIS:RegisterEvent("ADDON_LOADED")
-LMIS:SetScript("OnEvent", LMIS.OnEvent)
+LMISC:RegisterEvent("ADDON_LOADED")
+LMISC:SetScript("OnEvent", LMISC.OnEvent)
 
-function LMIS:Initialize(popup)
+function LMISC:Initialize(popup)
 	popup:HookScript("OnShow", function() -- Only initialize when the popupframe shows
 		if self.frameInfo[popup] then
 			return
@@ -138,20 +128,22 @@ function LMIS:Initialize(popup)
 			icons_shown =  _G[info.icons_shown],
 		}
 		-- movable
-		popup:SetMovable(true)
-		popup:SetClampedToScreen(true)
-		popup:SetFrameStrata("HIGH") -- up from "Medium", GearManager was hidden behind stuff
-		popup:EnableMouse(true) -- GearManager not mouse enabled
-		popup:RegisterForDrag("LeftButton")
-		popup:SetScript("OnDragStart", popup.StartMoving)
-		popup:SetScript("OnDragStop", popup.StopMovingOrSizing)
+		if self.isVanilla then -- in wrath this keeps jumping back to the original position
+			popup:SetMovable(true)
+			popup:SetClampedToScreen(true)
+			popup:SetFrameStrata("HIGH") -- up from "Medium", GearManager was hidden behind stuff
+			popup:EnableMouse(true) -- GearManager not mouse enabled
+			popup:RegisterForDrag("LeftButton")
+			popup:SetScript("OnDragStart", popup.StartMoving)
+			popup:SetScript("OnDragStop", popup.StopMovingOrSizing)
+		end
 		info.sf:HookScript("OnMouseWheel", self.RefreshMouseFocus) -- update GameTooltip when scrollling
 
 		local sb = CreateFrame("EditBox", "$parentSearchBox", popup, "InputBoxTemplate")
 		sb:SetPoint("BOTTOMLEFT", 72, 15)
 		sb:SetPoint("RIGHT", info.okaybutton, "LEFT", 0, 0)
 		sb:SetHeight(15)
-		sb:SetFrameLevel(70) -- FrameStrata or level changed in 7.1
+		sb:SetFrameLevel(popup:GetFrameLevel()+1)
 		sb.info = info -- LMIS:InitSearch()
 		popup.SearchBox = sb -- LMIS.SearchBox_OnTextChanged()
 		-- no idea why fontstrings are drawn below the popup frame in 7.1
@@ -179,17 +171,14 @@ function LMIS:Initialize(popup)
 			sb.linkLabel:SetText()
 		end)
  		-- update scrollbar for the filtered icons
-		local isGuildBank = (popup == GuildBankPopupFrame)
-		if not isGuildBank then
-			hooksecurefunc(info.update, function()
-				if #self.searchIcons > 0 then
-					FauxScrollFrame_Update(info.sf, ceil(#self.searchIcons / ICONS_PER_ROW), ICON_ROWS, info.icon_row_height)
-					if popup == GearManagerDialogPopup then -- gear manager update func shows the buttons again, hide them
-						self:UpdateButtons(info, #self.searchIcons)
-					end
+		hooksecurefunc(info.update, function()
+			if #self.searchIcons > 0 then
+				FauxScrollFrame_Update(info.sf, ceil(#self.searchIcons / ICONS_PER_ROW), ICON_ROWS, info.icon_row_height)
+				if popup == GearManagerDialogPopup then -- gear manager update func shows the buttons again, hide them
+					self:UpdateButtons(info, #self.searchIcons)
 				end
+			end
 			end)
-		end
 		-- prehook for search functionality
 		local oldGetIconInfo = _G[info.geticoninfo]
 		_G[info.geticoninfo] = function(index)
@@ -207,18 +196,13 @@ function LMIS:Initialize(popup)
 				sb:SetText(strmatch(text, "H(%l+:%d+)") or "")
 			end
 		end)
-		if isGuildBank then
-			self:InitGuildBank(info)
-			info.update(popup)
-		else
-			self:UpdateButtons(info)
-			self:UpdateTextures(info)
-			_G[info.update]()
-		end
+		self:UpdateButtons(info)
+		self:UpdateTextures(info)
+		_G[info.update]()
 	end)
 end
 
-function LMIS:UpdateButtons(info, amount)
+function LMISC:UpdateButtons(info, amount)
 	local popup = info.popup
 	local buttons = info.buttons
 	-- set the frame specific globals to the new values
@@ -271,11 +255,12 @@ end
 
 -- in 7.1 Blizzard shows 90 icons, with 9th row half visible
 -- and an extra empty row as the very last row to make up for it
-function LMIS:UpdateTextures(info)
+function LMISC:UpdateTextures(info)
 	local popup = info.popup
 	-- calculate the extra width and height due to the new size
 	local extrawidth = (_G[info.buttons.."1"]:GetWidth() + 10) * (ICONS_PER_ROW - origNum[popup].icons_per_row)
-	local extraheight = (_G[info.buttons.."1"]:GetHeight() + 8) * (ICON_ROWS - origNum[popup].icon_rows) + 30
+	local heightoffset = self.isVanilla and 30 or 0
+	local extraheight = (_G[info.buttons.."1"]:GetHeight() + 8) * (ICON_ROWS - origNum[popup].icon_rows) + heightoffset
 	-- resize the frames
 	local size = origSize[popup]
 	popup:SetWidth(size.width + extrawidth)
@@ -284,11 +269,11 @@ function LMIS:UpdateTextures(info)
 	info.sf:SetHeight(size.sfheight + extraheight)
 end
 
-function LMIS.RefreshMouseFocus(_self)
+function LMISC.RefreshMouseFocus(_self)
 	local focus = GetMouseFocus()
 	if focus and focus:GetObjectType() == "CheckButton" then
 		local parent = focus:GetParent()
-		if parent and LMIS.frameInfo[parent] then
+		if parent and LMISC.frameInfo[parent] then
 			focus:GetScript("OnEnter")(focus)
 		end
 	end
@@ -298,33 +283,35 @@ for i, v in pairs({"lmis", "largermacro", "largermacroicon", "largermacroiconsel
 	_G["SLASH_LARGERMACROICONSELECTION"..i] = "/"..v
 end
 
-SlashCmdList.LARGERMACROICONSELECTION = function(msg)
-	local width, height = strmatch(msg, "(%d+)[^%d]+(%d+)")
-	width = tonumber(width) or 10
-	height = tonumber(height) or 10
-	if width >= 5 and height >= 4 then
-		-- avoid outgrowing the screen (1920x1080, normal UI Scale)
-		width = min(width, 40)
-		height = min(height, 21)
-		LMIS.db.width = width
-		LMIS.db.height = height
-		print(L.SETTING_VALUES:format(width, height))
+if LMISC.isVanilla then
+	SlashCmdList.LARGERMACROICONSELECTION = function(msg)
+		local width, height = strmatch(msg, "(%d+)[^%d]+(%d+)")
+		width = tonumber(width) or 10
+		height = tonumber(height) or 10
+		if width >= 5 and height >= 4 then
+			-- avoid outgrowing the screen (1920x1080, normal UI Scale)
+			width = min(width, 40)
+			height = min(height, 21)
+			LMISC.db.width = width
+			LMISC.db.height = height
+			print(L.SETTING_VALUES:format(width, height))
 
-		ICONS_PER_ROW = width
-		ICON_ROWS = height
-		ICONS_SHOWN = ICONS_PER_ROW * ICON_ROWS
-		for frame, info in pairs(LMIS.frameInfo) do
-			LMIS:UpdateButtons(info)
-			LMIS:UpdateTextures(info)
-			if frame:IsShown() then
-				_G[info.update]()
+			ICONS_PER_ROW = width
+			ICON_ROWS = height
+			ICONS_SHOWN = ICONS_PER_ROW * ICON_ROWS
+			for frame, info in pairs(LMISC.frameInfo) do
+				LMISC:UpdateButtons(info)
+				LMISC:UpdateTextures(info)
+				if frame:IsShown() then
+					_G[info.update]()
+				end
 			end
+		else
+			local version = GetAddOnMetadata("LargerMacroIconSelection", "Version")
+			print( format("%s |cffADFF2F%s|r", "LargerMacroIconSelection", version) )
+			print(L.USAGE)
+			print(L.USAGE_VALUES)
+			print(L.CURRENT_VALUES:format(LMISC.db.width, LMISC.db.height))
 		end
-	else
-		local version = GetAddOnMetadata("LargerMacroIconSelection", "Version")
-		print( format("%s |cffADFF2F%s|r", "LargerMacroIconSelection", version) )
-		print(L.USAGE)
-		print(L.USAGE_VALUES)
-		print(L.CURRENT_VALUES:format(LMIS.db.width, LMIS.db.height))
 	end
 end

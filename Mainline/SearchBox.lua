@@ -22,9 +22,18 @@ function LMIS:CreateSearchBox(popup)
 	sb.linkLabel:SetFontObject("GameFontNormal")
 	sb.linkLabel:SetTextColor(.62, .62, .62)
 	sb:SetScript("OnTextChanged", self.SearchBox_OnTextChanged)
-	sb:SetScript("OnEnterPressed", function()
-		sb:ClearFocus()
-	end)
+	if self.isWrath then -- on wrath clearing focus doesn not really work
+		sb:SetScript("OnEscapePressed", function()
+			popup.BorderBox.IconSelectorEditBox:SetFocus()
+		end)
+		sb:SetScript("OnEnterPressed", function()
+			popup.BorderBox.IconSelectorEditBox:SetFocus()
+		end)
+	else
+		sb:SetScript("OnEnterPressed", function()
+			sb:ClearFocus()
+		end)
+	end
 	sb.spinner = CreateFrame("Frame", nil, sb, "LoadingSpinnerTemplate")
 	sb.spinner:SetPoint("RIGHT")
 	sb.spinner:SetSize(24, 24)
@@ -51,7 +60,9 @@ function LMIS:InitSearch()
 		self.searchObject = LibAIS:CreateSearch(LibAIS_options)
 		self.searchObject:SetScript("OnSearchStarted", function()
 			wipe(self.searchIcons)
-			self.activeSearch.SearchBox.spinner:Show()
+			if self.activeSearch then -- sanity check
+				self.activeSearch.SearchBox.spinner:Show()
+			end
 		end)
 		self.searchObject:SetScript("OnSearchResultAdded", function(_self, texture, _, _, _, fdid)
 			tinsert(self.searchIcons, fdid)
@@ -78,7 +89,9 @@ function LMIS:ClearSearch(popup)
 	self.activeSearch = nil
 	wipe(self.searchIcons)
 	self.searchObject:Stop()
-	popup.SearchBox.spinner:Hide()
+	if popup then
+		popup.SearchBox.spinner:Hide()
+	end
 end
 
 function LMIS:SetSearchData(popup)

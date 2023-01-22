@@ -1,14 +1,14 @@
 local _, S = ...
-local LMIS = LargerMacroIconSelection
+local LMISC = LargerMacroIconSelectionClassic
 local LibAIS = LibStub("LibAdvancedIconSelector-1.0-LMIS")
 
-LMIS.searchIcons = {}
+LMISC.searchIcons = {}
 
 local LibAIS_options = {
 	sectionOrder = {"FileDataIcons"},
 }
 
-function LMIS:InitSearch()
+function LMISC:InitSearch()
 	if not self.searchObject then
 		self.searchObject = LibAIS:CreateSearch(LibAIS_options)
 		self.searchObject:SetScript("OnSearchStarted", function(_self)
@@ -38,16 +38,16 @@ function LMIS:InitSearch()
 	end
 end
 
-function LMIS:ClearSearch(info)
+function LMISC:ClearSearch(info)
 	self.activeSearch = nil
 	wipe(self.searchIcons)
 	self.searchObject:Stop()
 	if info.popup == GuildBankPopupFrame then
-		GB_ICON_FILENAMES = CopyTable(LMIS.GB_ORIGINAL)
+		GB_ICON_FILENAMES = CopyTable(LMISC.GB_ORIGINAL)
 	end
 end
 
-function LMIS:UpdateSearchPopup(info)
+function LMISC:UpdateSearchPopup(info)
 	local popup = info.popup
 	popup.selectedIcon = nil
 	info.sf:SetVerticalScroll(0)
@@ -69,14 +69,14 @@ function LMIS:UpdateSearchPopup(info)
 	end
 end
 
-function LMIS.SearchBox_OnTextChanged(sb, userInput)
+function LMISC.SearchBox_OnTextChanged(sb, userInput)
 	local info = sb.info
 	local text = sb:GetText()
 	local isNumber = tonumber(text)
 	if isNumber or strfind(text, "[:=]") then -- search by spell/item/achievement id
 		local link, id = text:lower():match("(%a+)[:=](%d+)")
 		local linkSearch
-		LMIS:ClearSearch(info)
+		LMISC:ClearSearch(info)
 		if isNumber or link == "filedata" and id then
 			linkSearch = S.FileData[isNumber or tonumber(id)]
 		elseif link == "spell" and id then
@@ -87,29 +87,29 @@ function LMIS.SearchBox_OnTextChanged(sb, userInput)
 			linkSearch = S.FileData[select(10, GetAchievementInfo(id))]
 		end
 		if linkSearch then
-			LMIS.activeSearch = info
-			LMIS.searchIcons[1] = linkSearch
+			LMISC.activeSearch = info
+			LMISC.searchIcons[1] = linkSearch
 			sb:SetTextColor(1, 1, 1)
 			sb.linkLabel:SetText(linkSearch)
 			if info.popup == GuildBankPopupFrame then
 				GB_ICON_FILENAMES = {linkSearch}
 			end
 		else
-			LMIS.searchIcons[1] = "INV_MISC_QUESTIONMARK"
+			LMISC.searchIcons[1] = "INV_MISC_QUESTIONMARK"
 			sb:SetTextColor(1, 0, 0)
 			sb.linkLabel:SetText()
 		end
-		LMIS:UpdateSearchPopup(info)
+		LMISC:UpdateSearchPopup(info)
 		_G[info.buttons.."1"]:Click()
 	else
 		sb:SetTextColor(1, 1, 1)
 		sb.linkLabel:SetText()
 		if #text > 0 then -- search by texture name
-			LMIS.searchObject:SetSearchParameter(text)
-			LMIS.activeSearch = info
+			LMISC.searchObject:SetSearchParameter(text)
+			LMISC.activeSearch = info
 		else
-			LMIS:ClearSearch(info)
-			LMIS:UpdateSearchPopup(info)
+			LMISC:ClearSearch(info)
+			LMISC:UpdateSearchPopup(info)
 		end
 	end
 end

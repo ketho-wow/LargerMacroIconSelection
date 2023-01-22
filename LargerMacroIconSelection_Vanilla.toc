@@ -19,4 +19,3 @@ Locales.lua
 
 Classic\LargerMacroIconSelection.lua
 Classic\SearchBox.lua
-Classic\GuildBank.lua

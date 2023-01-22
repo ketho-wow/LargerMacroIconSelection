@@ -31,7 +31,11 @@
 		"MAX_TALENT_TIERS",
 		"NUM_TALENT_COLUMNS",
 		"INVSLOT_FIRST_EQUIPPED",
-		"INVSLOT_LAST_EQUIPPED"
+		"INVSLOT_LAST_EQUIPPED",
+		"RunNextFrame",
+		"GetKeysArray",
+		"GetCursorPosition",
+		"EventUtil"
 	],
 	"Lua.diagnostics.disable": [
 		"deprecated",
