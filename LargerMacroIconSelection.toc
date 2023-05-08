@@ -4,6 +4,7 @@
 ## Author: Xinhuan, Ketho
 ## Notes: Shows you a much bigger icon selection frame
 ## SavedVariables: LargerMacroIconSelectionDB
+## IconTexture: interface\icons\spell_nature_polymorph
 ## OptionalDeps: Ace3
 ## X-Embeds: LibAdvancedIconSelector-1.0
 ## X-Curse-Project-ID: 14254
