@@ -37,6 +37,7 @@ if DEBUG and LibDebug then LibDebug() end
 
 local MAJOR_VERSION = "LibAdvancedIconSelector-1.0-LMIS"
 local MINOR_VERSION = 14			-- (do not call GetAddOnMetaData)
+local GetAddOnMetadata = GetAddOnMetadata or C_AddOns.GetAddOnMetadata
 
 if not LibStub then error(MAJOR_VERSION .. " requires LibStub to operate") end
 local lib = LibStub:NewLibrary(MAJOR_VERSION, MINOR_VERSION)
@@ -225,7 +226,9 @@ function lib:LoadKeywords(addonName)
 	local defaultRevision = nil
 	local defaultLoadable = select(5, GetAddOnInfo("AdvancedIconSelector-KeywordData"))
 	if defaultLoadable then
-		defaultRevision = tonumber(GetAddOnMetadata("AdvancedIconSelector-KeywordData", "X-Revision"))
+		-- LMIS: dirty hack
+		local success, rev = pcall(GetAddOnMetadata, "AdvancedIconSelector-KeywordData", "X-Revision")
+		defaultRevision = tonumber(rev)
 	end
 
 	-- Finally, get the revision that is already loaded.
