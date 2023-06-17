@@ -217,7 +217,7 @@ function lib:LoadKeywords(addonName)
 
 	-- Get the revision # of the specified addon (if it's enabled and loadable).
 	local addonRevision = nil
-	local addonLoadable = addonName and select(5, GetAddOnInfo(addonName))
+	local addonLoadable = addonName and select(4, GetAddOnInfo(addonName))
 	if addonLoadable then
 		addonRevision = tonumber(GetAddOnMetadata(addonName, "X-Revision"))
 	end
