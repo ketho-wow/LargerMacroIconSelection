@@ -224,10 +224,9 @@ function lib:LoadKeywords(addonName)
 
 	-- Then, get the revision # of the default library (if it's enabled and loadable).
 	local defaultRevision = nil
-	local defaultLoadable = select(5, GetAddOnInfo("AdvancedIconSelector-KeywordData"))
+	local defaultLoadable = select(4, GetAddOnInfo("AdvancedIconSelector-KeywordData"))
 	if defaultLoadable then
-		-- LMIS: dirty hack
-		local success, rev = pcall(GetAddOnMetadata, "AdvancedIconSelector-KeywordData", "X-Revision")
+		local rev = GetAddOnMetadata("AdvancedIconSelector-KeywordData", "X-Revision")
 		defaultRevision = tonumber(rev)
 	end
 
