@@ -35,7 +35,10 @@
 		"RunNextFrame",
 		"GetKeysArray",
 		"GetCursorPosition",
-		"EventUtil"
+		"EventUtil",
+		"EnumUtil",
+		"GetValuesArray",
+		"IconDataProviderMixin"
 	],
 	"Lua.diagnostics.disable": [
 		"deprecated",

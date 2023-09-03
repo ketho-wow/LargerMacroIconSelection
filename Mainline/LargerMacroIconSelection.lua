@@ -144,4 +144,6 @@ function LMIS:UpdatePopup(popup)
 	local index = popup.iconDataProvider:GetIndexOfIcon(selectedIcon)
 	popup.IconSelector:SetSelectedIndex(index)
 	popup:SetSelectedIconText()
+	-- new icon type dropdown
+	popup.BorderBox.IconTypeDropDown:SetSelectedValue(IconSelectorPopupFrameIconFilterTypes.All)
 end
