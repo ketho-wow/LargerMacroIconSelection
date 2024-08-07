@@ -55,28 +55,27 @@ local IconDataProviderExtraType = {
 };
 
 local function FillOutExtraIconsMapWithSpells(extraIconsMap)
-	for i = 1, GetNumSpellTabs() do
-		local tab, tabTex, offset, numSpells = GetSpellTabInfo(i);
-		offset = offset + 1;
-		local tabEnd = offset + numSpells;
-		for j = offset, tabEnd - 1 do
-			local spellType, ID = GetSpellBookItemInfo(j, "player");
-			if spellType ~= "FUTURESPELL" then
-				local fileID = GetSpellBookItemTexture(j, "player");
-				if fileID ~= nil then
-					extraIconsMap[fileID] = true;
+	for i = 1, C_SpellBook.GetNumSpellBookSkillLines() do
+		local skillLineInfo = C_SpellBook.GetSpellBookSkillLineInfo(i)
+		local offset, numSpells = skillLineInfo.itemIndexOffset, skillLineInfo.numSpellBookItems;
+		for j = offset + 1, offset + numSpells do
+			local itemType, actionID = C_SpellBook.GetSpellBookItemInfo(j, 0)
+			if itemType ~= 2 then
+				local iconID = C_SpellBook.GetSpellBookItemTexture(j, 0)
+				if iconID ~= nil then
+					extraIconsMap[iconID] = true;
 				end
 			end
 
-			if spellType == "FLYOUT" then
-				local _, _, numSlots, isKnown = GetFlyoutInfo(ID);
+			if spellType == 4 then
+				local _, _, numSlots, isKnown = GetFlyoutInfo(actionID);
 				if isKnown and (numSlots > 0) then
 					for k = 1, numSlots do
-						local spellID, overrideSpellID, isSlotKnown = GetFlyoutSlotInfo(ID, k)
+						local flyoutSpellID, overrideSpellID, isSlotKnown = GetFlyoutSlotInfo(actionID, k)
 						if isSlotKnown then
-							local fileID = GetSpellTexture(spellID);
-							if fileID ~= nil then
-								extraIconsMap[fileID] = true;
+							local iconID = C_Spell.GetSpellTexture(flyoutSpellID);
+							if iconID ~= nil then
+								extraIconsMap[iconID] = true;
 							end
 						end
 					end
