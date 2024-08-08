@@ -1,0 +1,7 @@
+## Interface: 40400
+## Title: IconFileNames
+## Description: Provides names corresponding to icon file IDs
+## LoadOnDemand: 1
+## IconTexture: Interface/Icons/INV_Scroll_03
+## Version: 1.0-4.4.0.55613
+IconFileNames.lua
