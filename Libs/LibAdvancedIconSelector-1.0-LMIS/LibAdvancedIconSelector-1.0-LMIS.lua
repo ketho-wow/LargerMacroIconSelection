@@ -1,3 +1,4 @@
+---@diagnostic disable: cast-local-type
 --[[========================================================================================
       LibAdvancedIconSelector provides a searchable icon selection GUI to World
       of Warcraft addons.
@@ -37,7 +38,6 @@ if DEBUG and LibDebug then LibDebug() end
 
 local MAJOR_VERSION = "LibAdvancedIconSelector-1.0-LMIS"
 local MINOR_VERSION = 14			-- (do not call GetAddOnMetaData)
-local GetAddOnMetadata = GetAddOnMetadata or C_AddOns.GetAddOnMetadata
 
 if not LibStub then error(MAJOR_VERSION .. " requires LibStub to operate") end
 local lib = LibStub:NewLibrary(MAJOR_VERSION, MINOR_VERSION)
@@ -219,14 +219,14 @@ function lib:LoadKeywords(addonName)
 	local addonRevision = nil
 	local addonLoadable = addonName and select(4, C_AddOns.GetAddOnInfo(addonName))
 	if addonLoadable then
-		addonRevision = tonumber(GetAddOnMetadata(addonName, "X-Revision"))
+		addonRevision = tonumber(C_AddOns.GetAddOnMetadata(addonName, "X-Revision"))
 	end
 
 	-- Then, get the revision # of the default library (if it's enabled and loadable).
 	local defaultRevision = nil
 	local defaultLoadable = select(4, C_AddOns.GetAddOnInfo("AdvancedIconSelector-KeywordData"))
 	if defaultLoadable then
-		local rev = GetAddOnMetadata("AdvancedIconSelector-KeywordData", "X-Revision")
+		local rev = C_AddOns.GetAddOnMetadata("AdvancedIconSelector-KeywordData", "X-Revision")
 		defaultRevision = tonumber(rev)
 	end
 

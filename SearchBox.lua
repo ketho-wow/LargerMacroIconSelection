@@ -92,6 +92,7 @@ function LMIS:SetSearchData(popup)
 		popup.BorderBox.IconTypeDropdown:Increment()
 		popup.BorderBox.IconTypeDropdown:Increment()
 	else -- cata/vanilla
+		popup.BorderBox.IconTypeDropDown:SetSelectedValue(IconSelectorPopupFrameIconFilterTypes.Item)
 		popup.BorderBox.IconTypeDropDown:SetSelectedValue(IconSelectorPopupFrameIconFilterTypes.Spell)
 	end
 
@@ -110,9 +111,9 @@ function LMIS.SearchBox_OnTextChanged(sb, userInput)
 		if isNumber or link == "filedata" and id then
 			fileID = isNumber or tonumber(id)
 		elseif link == "spell" and id then
-			fileID = select(3, GetSpellInfo(id))
+			fileID = select(3, C_Spell.GetSpellInfo(id))
 		elseif link == "item" and id then
-			fileID = select(5, GetItemInfoInstant(id))
+			fileID = select(5, C_Item.GetItemInfoInstant(id))
 		elseif link == "achievement" and id then
 			fileID = select(10, GetAchievementInfo(id))
 		end
