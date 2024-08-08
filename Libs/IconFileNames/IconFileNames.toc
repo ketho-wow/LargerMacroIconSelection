@@ -1,7 +1,0 @@
-## Interface: 110002, 110000
-## Title: IconFileNames
-## Description: Provides names corresponding to icon file IDs
-## LoadOnDemand: 1
-## IconTexture: Interface/Icons/INV_Misc_NotePicture2b
-## Version: 1.0-11.0.0.55939
-IconFileNames.lua
