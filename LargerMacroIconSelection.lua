@@ -20,25 +20,9 @@ local function GetIconFileNames()
 end
 
 -- save memory by only loading FileData when needed
-function LMIS:LoadFileData(addon)
+function LMIS:LoadFileData()
 	if not S.FileData then
-		local loaded, reason = C_AddOns.LoadAddOn(addon)
-		if not loaded then
-			if reason == "DISABLED" then
-				C_AddOns.EnableAddOn(addon)
-				C_AddOns.LoadAddOn(addon)
-			else
-				error(addon.." is "..reason)
-			end
-		end
-		local fd = _G[addon]
-		if self.isMainline then
-			S.FileData = GetIconFileNames()
-		elseif self.isCata then
-			S.FileData = fd:GetFileDataCata()
-		elseif self.isVanilla then
-			S.FileData = fd:GetFileDataVanilla()
-		end
+		S.FileData = GetIconFileNames()
 	end
 end
 
@@ -86,7 +70,7 @@ function LMIS:Initialize(popup)
 				popup.iconDataProvider:Release()
 			end
 		end)
-		self:LoadFileData("LargerMacroIconSelectionData")
+		self:LoadFileData()
 		self:InitSearch()
 		-- movable
 		popup:SetMovable(true)
