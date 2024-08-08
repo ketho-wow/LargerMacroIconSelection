@@ -22,18 +22,12 @@ function LMIS:CreateSearchBox(popup)
 	sb.linkLabel:SetFontObject("GameFontNormal")
 	sb.linkLabel:SetTextColor(.62, .62, .62)
 	sb:SetScript("OnTextChanged", self.SearchBox_OnTextChanged)
-	if self.isWrath then -- on wrath clearing focus doesn not really work
-		sb:SetScript("OnEscapePressed", function()
-			popup.BorderBox.IconSelectorEditBox:SetFocus()
-		end)
-		sb:SetScript("OnEnterPressed", function()
-			popup.BorderBox.IconSelectorEditBox:SetFocus()
-		end)
-	else
-		sb:SetScript("OnEnterPressed", function()
-			sb:ClearFocus()
-		end)
-	end
+	sb:SetScript("OnEscapePressed", function()
+		popup.BorderBox.IconSelectorEditBox:SetFocus()
+	end)
+	sb:SetScript("OnEnterPressed", function()
+		popup.BorderBox.IconSelectorEditBox:SetFocus()
+	end)
 	sb.spinner = CreateFrame("Frame", nil, sb, "LoadingSpinnerTemplate")
 	sb.spinner:SetPoint("RIGHT")
 	sb.spinner:SetSize(24, 24)
@@ -93,6 +87,14 @@ function LMIS:ClearSearch(popup)
 end
 
 function LMIS:SetSearchData(popup)
+	-- big hack because I just cant fix "All Icons" showing everything double without unfucking it
+	if popup.BorderBox.IconTypeDropdown then
+		popup.BorderBox.IconTypeDropdown:Increment()
+		popup.BorderBox.IconTypeDropdown:Increment()
+	else -- cata/vanilla
+		popup.BorderBox.IconTypeDropDown:SetSelectedValue(IconSelectorPopupFrameIconFilterTypes.Spell)
+	end
+
 	wipe(popup.iconDataProvider.extraIcons)
 	popup.iconDataProvider:SetIconData(LMIS.searchIcons)
 end
@@ -119,6 +121,11 @@ function LMIS.SearchBox_OnTextChanged(sb, userInput)
 			LMIS.searchIcons[1] = fileID
 			sb:SetTextColor(1, 1, 1)
 			sb.linkLabel:SetText(S.FileData[fileID])
+			-- more hacks so the searched icon doesnt show double
+			if popup.BorderBox.IconTypeDropdown then
+				popup.BorderBox.IconTypeDropdown:Decrement()
+				popup.BorderBox.IconTypeDropdown:Increment()
+			end
 			LMIS:SetSearchData(popup)
 			LMIS:UpdatePopup(popup)
 		else

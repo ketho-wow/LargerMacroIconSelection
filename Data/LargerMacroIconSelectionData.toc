@@ -1,13 +1,10 @@
-## Interface: 100105
-## Interface-Wrath: 30402
-## Interface-Classic: 11403
+## Interface: 110002, 110000, 40400, 11504, 11503
 ## Version: @project-version@
 ## Title: LargerMacroIconSelectionData
 ## Author: Xinhuan, Ketho
-## Notes: Load on Demand Icon FileData
+## Notes: Load on Demand Icon Data
 ## LoadOnDemand: 1
 ## IconTexture: interface\icons\spell_nature_polymorph
 
-FileDataRetail.lua
-FileDataWrath.lua
+FileDataCata.lua
 FileDataVanilla.lua

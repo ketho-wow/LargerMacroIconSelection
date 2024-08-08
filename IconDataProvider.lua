@@ -1,5 +1,4 @@
 
-local isMainline = (WOW_PROJECT_ID == WOW_PROJECT_MAINLINE)
 local QuestionMarkIconFileDataID = 134400;
 
 local NumActiveIconDataProviders = 0;
@@ -35,47 +34,47 @@ local function IconDataProvider_GetBaseIconTexture(iconType, index)
 	end
 end
 
-local function IconDataProvider_GetAllIconTypes()
-	local iconTypeValues = GetValuesArray(IconDataProviderIconType);
-	table.sort(iconTypeValues);
-	return iconTypeValues;
-end
+-- function IconDataProvider_GetAllIconTypes()
+-- 	local iconTypeValues = GetValuesArray(IconDataProviderIconType);
+-- 	table.sort(iconTypeValues);
+-- 	return iconTypeValues;
+-- end
 
 IconDataProviderLmisMixin = {};
 
-local IconDataProviderIconType = EnumUtil.MakeEnum(
-	"Spell",
-	"Item"
-);
+-- IconDataProviderIconType = EnumUtil.MakeEnum(
+-- 	"Spell",
+-- 	"Item"
+-- );
 
-local IconDataProviderExtraType = {
-	Spellbook = 1,
-	Equipment = 2,
-	None = 3,
-};
+-- IconDataProviderExtraType = {
+-- 	Spellbook = 1,
+-- 	Equipment = 2,
+-- 	None = 3,
+-- };
 
 local function FillOutExtraIconsMapWithSpells(extraIconsMap)
-	for i = 1, C_SpellBook.GetNumSpellBookSkillLines() do
-		local skillLineInfo = C_SpellBook.GetSpellBookSkillLineInfo(i)
-		local offset, numSpells = skillLineInfo.itemIndexOffset, skillLineInfo.numSpellBookItems;
-		for j = offset + 1, offset + numSpells do
-			local itemType, actionID = C_SpellBook.GetSpellBookItemInfo(j, 0)
-			if itemType ~= 2 then
-				local iconID = C_SpellBook.GetSpellBookItemTexture(j, 0)
-				if iconID ~= nil then
-					extraIconsMap[iconID] = true;
+	for skillLineIndex = 1, C_SpellBook.GetNumSpellBookSkillLines() do
+		local skillLineInfo = C_SpellBook.GetSpellBookSkillLineInfo(skillLineIndex);
+		for i = 1, skillLineInfo.numSpellBookItems do
+			local spellIndex = skillLineInfo.itemIndexOffset + i;
+			local spellType, ID = C_SpellBook.GetSpellBookItemType(spellIndex, Enum.SpellBookSpellBank.Player);
+			if spellType ~= "FUTURESPELL" then
+				local fileID = C_SpellBook.GetSpellBookItemTexture(spellIndex, Enum.SpellBookSpellBank.Player);
+				if fileID ~= nil then
+					extraIconsMap[fileID] = true;
 				end
 			end
 
-			if spellType == 4 then
-				local _, _, numSlots, isKnown = GetFlyoutInfo(actionID);
+			if spellType == "FLYOUT" then
+				local _, _, numSlots, isKnown = GetFlyoutInfo(ID);
 				if isKnown and (numSlots > 0) then
 					for k = 1, numSlots do
-						local flyoutSpellID, overrideSpellID, isSlotKnown = GetFlyoutSlotInfo(actionID, k)
+						local spellID, overrideSpellID, isSlotKnown = GetFlyoutSlotInfo(ID, k)
 						if isSlotKnown then
-							local iconID = C_Spell.GetSpellTexture(flyoutSpellID);
-							if iconID ~= nil then
-								extraIconsMap[iconID] = true;
+							local fileID = C_Spell.GetSpellTexture(spellID);
+							if fileID ~= nil then
+								extraIconsMap[fileID] = true;
 							end
 						end
 					end
@@ -128,9 +127,7 @@ function IconDataProviderLmisMixin:Init(type, extraIconsOnly, requestedIconTypes
 	if type == IconDataProviderExtraType.Spellbook then
 		local extraIconsMap = {};
 		FillOutExtraIconsMapWithSpells(extraIconsMap);
-		if isMainline then
-			FillOutExtraIconsMapWithTalents(extraIconsMap);
-		end
+		FillOutExtraIconsMapWithTalents(extraIconsMap);
 		self.extraIcons = GetKeysArray(extraIconsMap);
 	elseif type == IconDataProviderExtraType.Equipment then
 		local extraIconsMap = {};
@@ -230,5 +227,6 @@ function IconDataProviderLmisMixin:Release()
 end
 
 function IconDataProviderLmisMixin:SetIconData(icons) -- lmis
-	BaseIconFilenames[IconDataProviderExtraType.Spellbook] = icons
+	BaseIconFilenames[IconDataProviderIconType.Spell] = icons
+	BaseIconFilenames[IconDataProviderIconType.Item] = icons
 end

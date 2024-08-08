@@ -2,49 +2,71 @@ local _, S = ...
 LargerMacroIconSelection = CreateFrame("Frame")
 local LMIS = LargerMacroIconSelection
 LMIS.isMainline = (WOW_PROJECT_ID == WOW_PROJECT_MAINLINE)
-LMIS.isWrath = (WOW_PROJECT_ID == WOW_PROJECT_WRATH_CLASSIC )
+LMIS.isCata = (WOW_PROJECT_ID == WOW_PROJECT_CATACLYSM_CLASSIC)
+LMIS.isVanilla = (WOW_PROJECT_ID == WOW_PROJECT_CLASSIC)
 
 -- remove custom/duplicate icons from icon packs
 -- until Blizzard fixes their non-FileDataID icon support
 GetLooseMacroItemIcons = function() end
 GetLooseMacroIcons = function() end
 
-local defaults = {
-	width = 10,
-	height = 10,
-}
 LMIS.loadedFrames = {}
+
+local function GetIconFileNames()
+	if select(5, C_AddOns.GetAddOnInfo("IconFileNames")) == "DEMAND_LOADED" and not C_AddOns.IsAddOnLoaded("IconFileNames") then
+		C_AddOns.LoadAddOn("IconFileNames")
+	end
+	return ICON_FILE_NAMES
+end
 
 -- save memory by only loading FileData when needed
 function LMIS:LoadFileData(addon)
 	if not S.FileData then
-		local loaded, reason = LoadAddOn(addon)
+		local loaded, reason = C_AddOns.LoadAddOn(addon)
 		if not loaded then
 			if reason == "DISABLED" then
-				EnableAddOn(addon, true)
-				LoadAddOn(addon)
+				C_AddOns.EnableAddOn(addon)
+				C_AddOns.LoadAddOn(addon)
 			else
 				error(addon.." is "..reason)
 			end
 		end
 		local fd = _G[addon]
 		if self.isMainline then
-			S.FileData = fd:GetFileDataRetail()
-		elseif self.isWrath then
-			S.FileData = fd:GetFileDataWrath()
+			S.FileData = GetIconFileNames()
+		elseif self.isCata then
+			S.FileData = fd:GetFileDataCata()
+		elseif self.isVanilla then
+			S.FileData = fd:GetFileDataVanilla()
 		end
 	end
 end
 
 function LMIS:OnEvent(event, addon)
 	if addon == "LargerMacroIconSelection" then
-		LargerMacroIconSelectionDB = LargerMacroIconSelectionDB or CopyTable(defaults)
-		self.db = LargerMacroIconSelectionDB
-		if self.isMainline then
+		if not self.isVanilla then
 			self:Initialize(GearManagerPopupFrame)
 		end
-		EventUtil.ContinueOnAddOnLoaded("Blizzard_MacroUI", function() self:Initialize(MacroPopupFrame) end)
-		EventUtil.ContinueOnAddOnLoaded("Blizzard_GuildBankUI", function() self:Initialize(GuildBankPopupFrame) end)
+		if self.isMainline then
+			self:Initialize(AccountBankPanel.TabSettingsMenu)
+		end
+		EventUtil.ContinueOnAddOnLoaded("Blizzard_MacroUI", function()
+			-- only the macro popup frame seems affected when it is user placed
+			-- it can brick the setup so fix it and tell the user to reload
+			if MacroPopupFrame:IsUserPlaced() then
+				print("|cff71d5ffLargerMacroIconSelection:|r Requires a |cFFFFFF00|Haddon:LargerMacroIconSelection|h[/reload]|h|r to fix the MacroPopupFrame.")
+				MacroPopupFrame:SetUserPlaced(false)
+				hooksecurefunc("SetItemRef", function(link)
+					local linkType, linkAddon = strsplit(":", link)
+					if linkType == "addon" and linkAddon == "LargerMacroIconSelection" then
+						C_UI.Reload()
+					end
+				end)
+			end
+			self:Initialize(MacroPopupFrame) end)
+		EventUtil.ContinueOnAddOnLoaded("Blizzard_GuildBankUI", function()
+			self:Initialize(GuildBankPopupFrame)
+		end)
 	end
 end
 
@@ -70,7 +92,11 @@ function LMIS:Initialize(popup)
 		popup:SetMovable(true)
 		popup:SetClampedToScreen(true)
 		popup:RegisterForDrag("LeftButton")
-		popup:SetScript("OnDragStart", popup.StartMoving)
+		popup:SetScript("OnDragStart", function()
+			-- StartMoving makes it user placed which would make the macro popup remember its position and error
+			popup:StartMoving()
+			popup:SetUserPlaced(false)
+		end)
 		popup:SetScript("OnDragStop", popup.StopMovingOrSizing)
 		-- searchbox
 		self:CreateSearchBox(popup)
@@ -144,6 +170,4 @@ function LMIS:UpdatePopup(popup)
 	local index = popup.iconDataProvider:GetIndexOfIcon(selectedIcon)
 	popup.IconSelector:SetSelectedIndex(index)
 	popup:SetSelectedIconText()
-	-- new icon type dropdown
-	popup.BorderBox.IconTypeDropDown:SetSelectedValue(IconSelectorPopupFrameIconFilterTypes.All)
 end

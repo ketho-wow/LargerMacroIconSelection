@@ -1,10 +1,11 @@
-## Interface: 100105
+## Interface: 110002, 110000, 40400, 11504, 11503
 ## Version: @project-version@
 ## Title: LargerMacroIconSelection
 ## Author: Xinhuan, Ketho
 ## Notes: Shows you a much bigger icon selection frame
 ## SavedVariables: LargerMacroIconSelectionDB
 ## IconTexture: interface\icons\spell_nature_polymorph
+## Dependencies: IconFileNames
 ## OptionalDeps: Ace3
 ## X-Embeds: LibAdvancedIconSelector-1.0
 ## X-Curse-Project-ID: 14254
@@ -20,8 +21,6 @@ Libs\AceLocale-3.0\AceLocale-3.0.xml
 Libs\LibAdvancedIconSelector-1.0-LMIS\enUS.lua
 Libs\LibAdvancedIconSelector-1.0-LMIS\LibAdvancedIconSelector-1.0-LMIS.lua
 
-Locales.lua
-
-Mainline\IconDataProvider.lua
-Mainline\LargerMacroIconSelection.lua
-Mainline\SearchBox.lua
+IconDataProvider.lua
+LargerMacroIconSelection.lua
+SearchBox.lua
