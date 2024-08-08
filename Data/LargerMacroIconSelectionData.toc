@@ -6,4 +6,5 @@
 ## LoadOnDemand: 1
 ## IconTexture: interface\icons\spell_nature_polymorph
 
+LargerMacroIconSelectionData.lua
 IconFileNames.lua

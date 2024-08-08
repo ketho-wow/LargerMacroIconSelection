@@ -1,4 +1,3 @@
--- https://www.townlong-yak.com/addons/iconfilenames
 local m, V, A, T = {}, select(4, GetBuildInfo()), ...
 
 for i, n in ([[-
@@ -28925,11 +28924,4 @@ for i, n in ([[-
 	m[i+0] = n
 end
 
---(A == "IconFileNames" and _G or T).ICON_FILE_NAMES = m
-
--- I want to use it as loadondemand addon while embedding it into my own addon and changing the TOC
-LargerMacroIconSelectionData = {}
-
-function LargerMacroIconSelectionData:GetFileData()
-	return m
-end
+(A == "IconFileNames" and _G or T).ICON_FILE_NAMES = m
