@@ -1,0 +1,9 @@
+## Interface: 110002, 110000, 40400, 11504, 11503
+## Version: @project-version@
+## Title: LargerMacroIconSelectionData
+## Author: Xinhuan, Ketho
+## Notes: Load on Demand Icon FileData
+## LoadOnDemand: 1
+## IconTexture: interface\icons\spell_nature_polymorph
+
+IconFileNames.lua

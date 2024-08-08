@@ -15,7 +15,6 @@
         "$USERPROFILE\\.vscode\\extensions\\ketho.wow-api-0.15.7\\Annotations"
     ],
     "Lua.diagnostics.disable": [
-        "deprecated",
         "inject-field",
         "unbalanced-assignments",
         "param-type-mismatch",

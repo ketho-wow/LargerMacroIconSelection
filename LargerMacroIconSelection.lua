@@ -12,17 +12,19 @@ GetLooseMacroIcons = function() end
 
 LMIS.loadedFrames = {}
 
-local function GetIconFileNames()
-	if select(5, C_AddOns.GetAddOnInfo("IconFileNames")) == "DEMAND_LOADED" and not C_AddOns.IsAddOnLoaded("IconFileNames") then
-		C_AddOns.LoadAddOn("IconFileNames")
-	end
-	return ICON_FILE_NAMES
-end
-
 -- save memory by only loading FileData when needed
-function LMIS:LoadFileData()
+function LMIS:LoadFileData(addon)
 	if not S.FileData then
-		S.FileData = GetIconFileNames()
+		local loaded, reason = C_AddOns.LoadAddOn(addon)
+		if not loaded then
+			if reason == "DISABLED" then
+				C_AddOns.EnableAddOn(addon)
+				C_AddOns.LoadAddOn(addon)
+			else
+				error(addon.." is "..reason)
+			end
+		end
+		S.FileData = _G[addon]:GetFileData()
 	end
 end
 
@@ -70,7 +72,7 @@ function LMIS:Initialize(popup)
 				popup.iconDataProvider:Release()
 			end
 		end)
-		self:LoadFileData()
+		self:LoadFileData("LargerMacroIconSelectionData")
 		self:InitSearch()
 		-- movable
 		popup:SetMovable(true)
