@@ -1,4 +1,2 @@
-Libs/LibStub
-Libs/CallbackHandler-1.0
-Libs/Ace*
+Libs
 Data/IconFileNames.lua

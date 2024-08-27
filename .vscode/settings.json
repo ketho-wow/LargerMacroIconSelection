@@ -12,7 +12,7 @@
         "utf8": "disable"
     },
     "Lua.workspace.library": [
-        "$USERPROFILE\\.vscode\\extensions\\ketho.wow-api-0.15.7\\Annotations"
+        "~\\.vscode\\extensions\\ketho.wow-api-0.17.5\\Annotations"
     ],
     "Lua.diagnostics.disable": [
         "inject-field",
@@ -49,6 +49,8 @@
         "StackSplitFrame",
         "ICON_FILE_NAMES",
         "LibDebug",
-        "LargerMacroIconSelectionData"
+        "LargerMacroIconSelectionData",
+        "NORMAL_FONT_COLOR_CODE",
+        "GRAY_FONT_COLOR_CODE"
     ]
 }

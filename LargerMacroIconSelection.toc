@@ -1,11 +1,11 @@
-## Interface: 110002, 110000, 40400, 11504, 11503
+## Interface: 110002, 40400, 11503
 ## Version: @project-version@
 ## Title: LargerMacroIconSelection
 ## Author: Xinhuan, Ketho
 ## Notes: Shows you a much bigger icon selection frame
 ## SavedVariables: LargerMacroIconSelectionDB
-## IconTexture: interface\icons\spell_nature_polymorph
 ## OptionalDeps: Ace3
+## IconTexture: interface\icons\spell_nature_polymorph
 ## X-Embeds: LibAdvancedIconSelector-1.0
 ## X-Curse-Project-ID: 14254
 ## X-WoWI-ID: 11189
