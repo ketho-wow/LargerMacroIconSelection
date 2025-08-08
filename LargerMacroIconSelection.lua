@@ -2,7 +2,6 @@ local _, S = ...
 LargerMacroIconSelection = CreateFrame("Frame")
 local LMIS = LargerMacroIconSelection
 LMIS.isMainline = (WOW_PROJECT_ID == WOW_PROJECT_MAINLINE)
-LMIS.isCata = (WOW_PROJECT_ID == WOW_PROJECT_CATACLYSM_CLASSIC)
 LMIS.isVanilla = (WOW_PROJECT_ID == WOW_PROJECT_CLASSIC)
 
 -- remove custom/duplicate icons from icon packs
