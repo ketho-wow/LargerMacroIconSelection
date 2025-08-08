@@ -34,7 +34,7 @@ function LMIS:OnEvent(event, addon)
 			self:Initialize(GearManagerPopupFrame)
 		end
 		if self.isMainline then
-			self:Initialize(AccountBankPanel.TabSettingsMenu)
+			self:Initialize(BankFrame.BankPanel.TabSettingsMenu)
 		end
 		EventUtil.ContinueOnAddOnLoaded("Blizzard_MacroUI", function()
 			-- only the macro popup frame seems affected when it is user placed
