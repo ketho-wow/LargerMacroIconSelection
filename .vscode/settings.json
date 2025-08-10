@@ -54,6 +54,7 @@
         "GRAY_FONT_COLOR_CODE",
         "INVSLOT_FIRST_EQUIPPED",
         "INVSLOT_LAST_EQUIPPED",
-        "BankFrame"
+        "BankFrame",
+        "Baganator_CategoryViewBankViewFrameblizzard"
     ]
 }
