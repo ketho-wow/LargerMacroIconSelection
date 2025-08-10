@@ -2,7 +2,7 @@
 ## Version: @project-version@
 ## Title: LargerMacroIconSelection
 ## Author: Xinhuan, Ketho
-## Notes: Shows you a much bigger icon selection frame
+## Notes: Adds a search box to the icon selection frame
 ## SavedVariables: LargerMacroIconSelectionDB
 ## OptionalDeps: Ace3
 ## IconTexture: interface\icons\spell_nature_polymorph

@@ -59,6 +59,7 @@ end
 function LMIS:PLAYER_LOGIN(event)
 	if self.isMainline then
 		EventUtil.ContinueOnAddOnLoaded("Baganator", function()
+			self:Initialize(Baganator_SingleViewBankViewFrameblizzard.Character.TabSettingsMenu)
 			self:Initialize(Baganator_CategoryViewBankViewFrameblizzard.Character.TabSettingsMenu)
 		end)
 	end

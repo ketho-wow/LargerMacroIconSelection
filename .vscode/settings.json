@@ -55,6 +55,7 @@
         "INVSLOT_FIRST_EQUIPPED",
         "INVSLOT_LAST_EQUIPPED",
         "BankFrame",
-        "Baganator_CategoryViewBankViewFrameblizzard"
+        "Baganator_CategoryViewBankViewFrameblizzard",
+        "Baganator_SingleViewBankViewFrameblizzard"
     ]
 }
