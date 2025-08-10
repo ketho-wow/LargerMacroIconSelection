@@ -111,7 +111,10 @@ function LMIS.SearchBox_OnTextChanged(sb, userInput)
 		if isNumber or link == "filedata" and id then
 			fileID = isNumber or tonumber(id)
 		elseif link == "spell" and id then
-			fileID = C_Spell.GetSpellInfo(id).iconID
+			local spell = C_Spell.GetSpellInfo(id)
+			if spell then
+				fileID = spell.iconID
+			end
 		elseif link == "item" and id then
 			fileID = select(5, C_Item.GetItemInfoInstant(id))
 		elseif link == "achievement" and id then
