@@ -52,38 +52,24 @@ function LMIS:ADDON_LOADED(event, addon)
 		EventUtil.ContinueOnAddOnLoaded("Blizzard_GuildBankUI", function()
 			self:Initialize(GuildBankPopupFrame)
 		end)
+		if LMIS.isMainline then
+			EventUtil.ContinueOnAddOnLoaded("Baganator", function()
+				Baganator.API.Skins.RegisterListener(function(details)
+					if details.regionType == "ButtonFrame" and details.tags and tIndexOf(details.tags, "bank") ~= nil then
+						self:Initialize(details.region.Character.TabSettingsMenu)
+						self:Initialize(details.region.Warband.TabSettingsMenu)
+					end
+				end)
+			end)
+		end
 		self:UnregisterEvent("ADDON_LOADED")
 	end
-end
-
-function LMIS:BANKFRAME_OPENED()
-	self:UnregisterEvent("BANKFRAME_OPENED")
-	EventUtil.ContinueOnAddOnLoaded("Baganator", function()
-		-- Usually both frames (single and category) exist after BANKFRAME_OPENED, but just to be safe…
-		if Baganator_SingleViewBankViewFrameblizzard then
-			self:Initialize(Baganator_SingleViewBankViewFrameblizzard.Character.TabSettingsMenu)
-			self:Initialize(Baganator_SingleViewBankViewFrameblizzard.Warband.TabSettingsMenu)
-		end
-		if Baganator_CategoryViewBankViewFrameblizzard then
-			self:Initialize(Baganator_CategoryViewBankViewFrameblizzard.Character.TabSettingsMenu)
-			self:Initialize(Baganator_CategoryViewBankViewFrameblizzard.Warband.TabSettingsMenu)
-		end
-		if Baganator_SingleViewBankViewFramedark then
-			self:Initialize(Baganator_SingleViewBankViewFramedark.Character.TabSettingsMenu)
-			self:Initialize(Baganator_SingleViewBankViewFramedark.Warband.TabSettingsMenu)
-		end
-		if Baganator_CategoryViewBankViewFramedark then
-			self:Initialize(Baganator_CategoryViewBankViewFramedark.Character.TabSettingsMenu)
-			self:Initialize(Baganator_CategoryViewBankViewFramedark.Warband.TabSettingsMenu)
-		end
-	end)
 end
 
 function LMIS:OnEvent(event, ...)
 	self[event](self, event, ...)
 end
 
-if LMIS.isMainline then LMIS:RegisterEvent("BANKFRAME_OPENED") end
 LMIS:RegisterEvent("ADDON_LOADED")
 LMIS:SetScript("OnEvent", LMIS.OnEvent)
 
