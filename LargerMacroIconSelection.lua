@@ -68,6 +68,14 @@ function LMIS:BANKFRAME_OPENED()
 			self:Initialize(Baganator_CategoryViewBankViewFrameblizzard.Character.TabSettingsMenu)
 			self:Initialize(Baganator_CategoryViewBankViewFrameblizzard.Warband.TabSettingsMenu)
 		end
+		if Baganator_SingleViewBankViewFramedark then
+			self:Initialize(Baganator_SingleViewBankViewFramedark.Character.TabSettingsMenu)
+			self:Initialize(Baganator_SingleViewBankViewFramedark.Warband.TabSettingsMenu)
+		end
+		if Baganator_CategoryViewBankViewFramedark then
+			self:Initialize(Baganator_CategoryViewBankViewFramedark.Character.TabSettingsMenu)
+			self:Initialize(Baganator_CategoryViewBankViewFramedark.Warband.TabSettingsMenu)
+		end
 	end)
 end
 
