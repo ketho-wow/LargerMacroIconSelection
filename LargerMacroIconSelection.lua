@@ -66,11 +66,21 @@ function LMIS:ADDON_LOADED(event, addon)
 	end
 end
 
+function LMIS:BANKFRAME_OPENED(event)
+	EventUtil.ContinueOnAddOnLoaded("Bagnon", function()
+		RunNextFrame(function()
+			self:Initialize(Bagnon.BankBag.Settings)
+		end)
+	end)
+	self:UnregisterEvent(event)
+end
+
 function LMIS:OnEvent(event, ...)
 	self[event](self, event, ...)
 end
 
 LMIS:RegisterEvent("ADDON_LOADED")
+LMIS:RegisterEvent("BANKFRAME_OPENED")
 LMIS:SetScript("OnEvent", LMIS.OnEvent)
 
 function LMIS:Initialize(popup)
