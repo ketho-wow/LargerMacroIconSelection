@@ -2,6 +2,8 @@ local _, S = ...
 LargerMacroIconSelection = CreateFrame("Frame")
 local LMIS = LargerMacroIconSelection
 LMIS.isMainline = (WOW_PROJECT_ID == WOW_PROJECT_MAINLINE)
+LMIS.isMop = (WOW_PROJECT_ID == WOW_PROJECT_MISTS_CLASSIC)
+LMIS.isTBC = (WOW_PROJECT_ID == WOW_PROJECT_BURNING_CRUSADE_CLASSIC)
 LMIS.isVanilla = (WOW_PROJECT_ID == WOW_PROJECT_CLASSIC)
 
 -- remove custom/duplicate icons from icon packs
@@ -29,7 +31,7 @@ end
 
 function LMIS:ADDON_LOADED(event, addon)
 	if addon == "LargerMacroIconSelection" then
-		if not self.isVanilla then
+		if not self.isVanilla and not self.isTBC then
 			self:Initialize(GearManagerPopupFrame)
 		end
 		if self.isMainline then
@@ -50,7 +52,10 @@ function LMIS:ADDON_LOADED(event, addon)
 			end
 			self:Initialize(MacroPopupFrame) end)
 		EventUtil.ContinueOnAddOnLoaded("Blizzard_GuildBankUI", function()
-			self:Initialize(GuildBankPopupFrame)
+			-- todo: test this on mists with/without baganator
+			if GuildBankPopupFrame.BorderBox then
+				self:Initialize(GuildBankPopupFrame)
+			end
 		end)
 		EventUtil.ContinueOnAddOnLoaded("Blizzard_Transmog", function()
 			self:Initialize(TransmogFrame.OutfitPopup)

@@ -56,6 +56,8 @@
         "INVSLOT_LAST_EQUIPPED",
         "BankFrame",
         "Baganator",
-        "Bagnon"
+        "Bagnon",
+        "TransmogFrame",
+        "WOW_PROJECT_MISTS_CLASSIC"
     ]
 }

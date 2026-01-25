@@ -1,4 +1,4 @@
-## Interface: 110200, 50500, 11507
+## Interface: 120000, 50503, 20505, 11508
 ## Version: @project-version@
 ## Title: LargerMacroIconSelection
 ## Author: Xinhuan, Ketho

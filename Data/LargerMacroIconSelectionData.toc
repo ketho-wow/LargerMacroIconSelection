@@ -1,8 +1,8 @@
-## Interface: 110200, 50500, 11507
-## Version: 1.0-62438
+## Interface: 120000, 50503, 20505, 11508
+## Version: 8.1.2
 ## Title: LargerMacroIconSelectionData
-## Author: Xinhuan, Ketho
-## Notes: Load on Demand Icon Data
+## Author: foxlit
+## Notes: Load on Demand IconFileNames
 ## LoadOnDemand: 1
 ## IconTexture: interface\icons\spell_nature_polymorph
 ## X-Website: https://www.townlong-yak.com/addons/iconfilenames
